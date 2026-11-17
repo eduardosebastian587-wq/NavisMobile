@@ -1,4 +1,7 @@
 // Acceso a archivos: Drive (o URL) con caché local (Cache API) y detección de cambios por HEAD.
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+const nativo = Capacitor.isNativePlatform();
 const CACHE = 'navismobile-v1';
 const META = 'navismobile-meta';
 const dr = (id) => `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`;
@@ -17,7 +20,33 @@ async function enDev(a) {
 }
 
 /** Descarga con progreso: progreso(bytesRecibidos, bytesTotales). */
+// Android: el WebView envía Sec-Fetch-Mode: cors y Drive responde 403 sin CORS; se descarga por la red nativa.
+async function descargarNativo(a, progreso) {
+  const ruta = `navis_${Date.now()}.tmp`;
+  const h = await Filesystem.addListener('progress', (p) => { if (p.url === urlDe(a)) progreso?.(p.bytes, p.contentLength > 0 ? p.contentLength : a.bytes || 0); });
+  try {
+    await Filesystem.downloadFile({ url: urlDe(a), path: ruta, directory: Directory.Cache, progress: true });
+    const { uri } = await Filesystem.getUri({ path: ruta, directory: Directory.Cache });
+    const r = await fetch(Capacitor.convertFileSrc(uri));
+    const buf = await r.arrayBuffer();
+    if (buf.byteLength < 1024 && /<html/i.test(new TextDecoder().decode(buf.slice(0, 200)))) throw new Error(`Drive no entregó el archivo: ${a.nombre}`);
+    let mod = '';
+    try { mod = (await cabecerasHead(a))['last-modified'] || ''; } catch {}
+    await (await caches.open(CACHE)).put(clave(a), new Response(buf.slice(0), { headers: { 'content-length': String(buf.byteLength) } }));
+    guardarMeta(a, { modificado: mod, bytes: buf.byteLength, fecha: Date.now() });
+    return buf;
+  } finally { h.remove(); try { await Filesystem.deleteFile({ path: ruta, directory: Directory.Cache }); } catch {} }
+}
+async function cabecerasHead(a) {
+  if (nativo) {
+    const r = await CapacitorHttp.request({ url: urlDe(a), method: 'HEAD' });
+    return Object.fromEntries(Object.entries(r.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  }
+  const r = await fetch(urlDe(a), { method: 'HEAD' });
+  return { 'last-modified': r.headers.get('last-modified') || '', 'content-length': r.headers.get('content-length') || '' };
+}
 async function descargar(a, progreso) {
+  if (nativo) return descargarNativo(a, progreso);
   const r = await fetch(urlDe(a));
   if (!r.ok) throw new Error(`Descarga fallida (${r.status}): ${a.nombre}`);
   const total = Number(r.headers.get('content-length')) || a.bytes || 0;
@@ -48,8 +77,8 @@ export async function comprobar(a) {
   if (!(await c.match(clave(a)))) return 'no_descargado';
   if (a.url && !a.drive) return 'al_dia';
   try {
-    const r = await fetch(urlDe(a), { method: 'HEAD' }), m = metas()[clave(a)] || {};
-    const mod = r.headers.get('last-modified') || '', len = Number(r.headers.get('content-length')) || 0;
+    const hd = await cabecerasHead(a), m = metas()[clave(a)] || {};
+    const mod = hd['last-modified'] || '', len = Number(hd['content-length']) || 0;
     return (mod && m.modificado && mod !== m.modificado) || (len && m.bytes && len !== m.bytes) ? 'cambio' : 'al_dia';
   } catch { return 'sin_conexion'; }
 }

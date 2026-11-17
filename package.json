@@ -21,6 +21,7 @@
   "dependencies": {
     "@capacitor/android": "^8.6.2",
     "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
     "three": "^0.170.0"
   },
   "devDependencies": {
