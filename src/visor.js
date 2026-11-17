@@ -7,18 +7,24 @@ import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.j
 const CAPA_AYUDA = 1;   // marcas de pivote, medidas y cintas de correa: no participan en la selección
 
 const VS = `#include <clipping_planes_pars_vertex>
-void main(){ #include <begin_vertex>
- #include <project_vertex>
- #include <clipping_planes_vertex> }`;
+void main(){
+#include <begin_vertex>
+#include <project_vertex>
+#include <clipping_planes_vertex>
+}`;
 const FS_PROF = `#include <clipping_planes_pars_fragment>
-void main(){ #include <clipping_planes_fragment>
+void main(){
+#include <clipping_planes_fragment>
  vec4 enc = fract(gl_FragCoord.z * vec4(1.0, 255.0, 65025.0, 16581375.0));
  enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
- gl_FragColor = enc; }`;
+ gl_FragColor = enc;
+}`;
 const FS_ID = `#include <clipping_planes_pars_fragment>
 uniform vec3 color;
-void main(){ #include <clipping_planes_fragment>
- gl_FragColor = vec4(color, 1.0); }`;
+void main(){
+#include <clipping_planes_fragment>
+ gl_FragColor = vec4(color, 1.0);
+}`;
 
 export class Visor {
   constructor(canvas, o = {}) {
