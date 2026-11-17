@@ -27,7 +27,9 @@ window.E = E;
 // ------------------------------------------------------------------ ayudantes (capa 1)
 const marca = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: 0x4aa3ff, depthTest: false, transparent: true, opacity: 0.8 }));
 marca.layers.set(1); marca.visible = false; marca.renderOrder = 10; visor.ayudantes.add(marca);
-const cajaSel = new THREE.Box3Helper(new THREE.Box3(), 0xffd24a); cajaSel.layers.set(1); cajaSel.visible = false; visor.ayudantes.add(cajaSel);
+// Resaltado de selección estilo Navisworks: la pieza seleccionada se pinta de azul (sin caja).
+const matSel = new THREE.MeshStandardMaterial({ name: 'seleccion', color: 0x2f7bff, emissive: 0x0b3fa8, emissiveIntensity: 0.6, roughness: 0.55, metalness: 0, side: THREE.DoubleSide });
+let selMatOrig = null;
 const lineaMed = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0xffd24a, depthTest: false }));
 lineaMed.layers.set(1); lineaMed.visible = false; lineaMed.renderOrder = 11; lineaMed.frustumCulled = false; visor.ayudantes.add(lineaMed);
 
@@ -137,17 +139,20 @@ function actualizarCapas() {
   }
   cab('Capas del modelo');
   visor.mallas.forEach((m) => {
-    const x = m.userData, tag = x.tag ? ` · tag ${x.tag}` : '';
-    fila({ color: m.material.color ? '#' + m.material.color.getHexString() : '#888', titulo: m.name || 'malla ' + x.idx, sub: `${x.tris.toLocaleString('es')} triángulos${tag}`,
+    const x = m.userData, tag = x.tag ? ` · tag ${x.tag}` : '', mt = m === E.sel && selMatOrig ? [].concat(selMatOrig)[0] : m.material;
+    fila({ color: mt.color ? '#' + mt.color.getHexString() : '#888', titulo: m.name || 'malla ' + x.idx, sub: `${x.tris.toLocaleString('es')} triángulos${tag}`,
       visible: m.visible, onVis: (v) => (m.visible = v), onClick: () => seleccionar(m), buscar: `${m.name} ${x.tag || ''} ${x.ruta || ''}`, idx: x.idx });
     L.lastChild.querySelector('input').onclick = (e) => { e.stopPropagation(); m.visible = e.target.checked; visor.invalidar(); };
   });
   $('#filtroCapas').oninput = (e) => { const q = e.target.value.toLowerCase().trim(); $$('#listaCapas .item').forEach((i) => (i.style.display = !q || i.dataset.b.includes(q) ? '' : 'none')); };
 }
 function seleccionar(m) {
+  if (E.sel && selMatOrig) E.sel.material = selMatOrig; // restaurar la anterior
+  selMatOrig = null;
   E.sel = m; $$('#capas .item').forEach((i) => i.classList.toggle('sel', m && +i.dataset.i === m.userData.idx));
-  if (m) { cajaSel.box.setFromObject(m); cajaSel.visible = true; } else cajaSel.visible = false;
-  mostrarProps(m); visor.invalidar();
+  mostrarProps(m);
+  if (m) { selMatOrig = m.material; m.material = Array.isArray(selMatOrig) ? selMatOrig.map(() => matSel) : matSel; }
+  visor.invalidar();
 }
 function mostrarProps(m) {
   const p = $('#props'); if (!m) { p.textContent = 'Toque un objeto para ver sus propiedades.'; return; }
