@@ -1,0 +1,28 @@
+FBX (Navisworks) -> Blender  |  Instrucciones
+=============================================
+1. Descomprime este ZIP dentro de la carpeta "proyecto animacion"
+   (el .bat queda junto a los FBX y fbx_a_blender.py dentro de "herramientas").
+2. Requiere Blender 4.2 o superior instalado (gratis: https://www.blender.org/download/).
+3. Doble clic en CONVERTIR_FBX_A_BLENDER.bat -> elige el FBX -> elige el modo:
+     [1] Normal      piezas separadas, agrupadas en colecciones por TAG (recomendado)
+     [2] Por equipo  un objeto por TAG (para animar despieces)
+     [3] Liviano     un objeto por color y 50% de triangulos (modelos enormes)
+     [4] Original    conserva el arbol completo de Navisworks
+   Tambien puedes arrastrar un .fbx sobre el .bat.
+4. Resultado: convertidos_blender\<nombre>.blend y <nombre>.informe.txt
+
+Que corrige respecto a Importar FBX directo en Blender:
+ - Coordenadas de ~4.448.000 m: se restan en doble precision antes de crear la
+   geometria (sin esto, las piezas pequenas se deforman). El desfase queda en la
+   escena: "desfase_blender_m" (coordenada real = Blender + desfase).
+ - Cientos de miles de materiales -> fusionados por color (MAT_RRGGBB).
+ - Nodos vacios de Navisworks podados ANTES de importar (130 mil nodos: de >13 min a ~40 s);
+   cada malla guarda "ruta" (arbol de Navisworks) y "tag" (AREA-TIPO-NUMERO).
+ - Mallas renombradas con su elemento (1313-BD-0105 en vez de "Geometry").
+ - Origen de cada pieza en su propio centro (pivote listo para animar despieces).
+ - Transformaciones calculadas en doble precision (sin saltos de 0,5 m).
+ - Sin busqueda de texturas (evita esperas en Google Drive).
+ - Camara, sol, fondo oscuro y recorte de vista ajustados al tamano del modelo.
+
+Modelos de >1 GB (p. ej. area 1313 completo, 32 M triangulos): usar modo [3]
+o exportar desde Navisworks por zona. Blender necesita mucha RAM para esos.

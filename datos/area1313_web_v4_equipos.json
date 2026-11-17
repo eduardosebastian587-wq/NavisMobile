@@ -1,0 +1,372 @@
+{
+ "formato": "equipos-1313-v1",
+ "marco": "coordenadas del visor v4 (Y arriba); a Three: (TX - x, y + TZ, -z - TY)",
+ "TX": 8.132337890623603,
+ "TY": 38.733960937708616,
+ "TZ": 4.8060302734375,
+ "partes": [
+  {
+   "id": "gancho_1p",
+   "tag": "1313-CN-1406",
+   "padre": "carro_1",
+   "pivote": [
+    -40.0,
+    25.0,
+    5.1
+   ],
+   "estirable": {
+    "y1": 25.0,
+    "y2": 27.5
+   },
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 7170,
+     "pos": 0,
+     "nor": 86040
+    }
+   ],
+   "tri": 2390
+  },
+  {
+   "id": "gancho_1a",
+   "tag": "1313-CN-1406",
+   "padre": "carro_1",
+   "pivote": [
+    -40.0,
+    25.0,
+    7.2
+   ],
+   "estirable": {
+    "y1": 25.2,
+    "y2": 27.5
+   },
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 17160,
+     "pos": 107552,
+     "nor": 313472
+    }
+   ],
+   "tri": 5720
+  },
+  {
+   "id": "gancho_2p",
+   "tag": "1313-CN-1406",
+   "padre": "carro_2",
+   "pivote": [
+    -40.0,
+    25.0,
+    -27.339999999999996
+   ],
+   "estirable": {
+    "y1": 25.0,
+    "y2": 27.5
+   },
+   "oculto": true,
+   "mallas": [],
+   "tri": 0
+  },
+  {
+   "id": "gancho_2a",
+   "tag": "1313-CN-1406",
+   "padre": "carro_2",
+   "pivote": [
+    -40.0,
+    25.0,
+    -25.24
+   ],
+   "estirable": {
+    "y1": 25.2,
+    "y2": 27.5
+   },
+   "oculto": true,
+   "mallas": [],
+   "tri": 0
+  },
+  {
+   "id": "carro_1",
+   "tag": "1313-CN-1406",
+   "padre": "portico",
+   "pivote": [
+    -40.0,
+    28.0,
+    6.75
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 26850,
+     "pos": 364952,
+     "nor": 687152
+    }
+   ],
+   "tri": 8950
+  },
+  {
+   "id": "carro_2",
+   "tag": "1313-CN-1406",
+   "padre": "portico",
+   "pivote": [
+    -40.0,
+    28.0,
+    -25.689999999999998
+   ],
+   "vacio": true,
+   "mallas": [],
+   "tri": 0
+  },
+  {
+   "id": "m_carro",
+   "tag": "/^1313-CN-1406-M[1-4]$/",
+   "padre": "carro_1",
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 27072,
+     "pos": 767704,
+     "nor": 1092568
+    }
+   ],
+   "tri": 9024
+  },
+  {
+   "id": "portico",
+   "tag": "1313-CN-1406",
+   "padre": null,
+   "pivote": [
+    -40.0,
+    -1.0,
+    4.0
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 332721,
+     "pos": 1173784,
+     "nor": 5166436
+    }
+   ],
+   "tri": 110907
+  },
+  {
+   "id": "m_ruedas",
+   "tag": "/^1313-CN-1406-M(5|6|7|8|9|10|11|12)$/",
+   "padre": "portico",
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 37344,
+     "pos": 6164600,
+     "nor": 6612728
+    }
+   ],
+   "tri": 12448
+  },
+  {
+   "id": "gancho_1404",
+   "tag": "1313-CN-1404",
+   "padre": "pluma_1404",
+   "pivote": [
+    -25.3,
+    20.4,
+    8.4
+   ],
+   "estirable": {
+    "y1": 20.66,
+    "y2": 20.9
+   },
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 5586,
+     "pos": 6724760,
+     "nor": 6791792
+    }
+   ],
+   "tri": 1862
+  },
+  {
+   "id": "pluma_1404",
+   "tag": "1313-CN-1404",
+   "padre": null,
+   "pivote": [
+    -37.79,
+    20.9,
+    8.41
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 20364,
+     "pos": 6808552,
+     "nor": 7052920
+    }
+   ],
+   "tri": 6788
+  },
+  {
+   "id": "m_1404",
+   "tag": "/^1313-CN-1404-M[1-4]$/",
+   "padre": "pluma_1404",
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 8904,
+     "pos": 7114012,
+     "nor": 7220860
+    }
+   ],
+   "tri": 2968
+  },
+  {
+   "id": "gancho_1405",
+   "tag": "1313-CN-1405",
+   "padre": "pluma_1405",
+   "pivote": [
+    -22.7,
+    20.4,
+    22.18
+   ],
+   "estirable": {
+    "y1": 20.66,
+    "y2": 20.9
+   },
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 5589,
+     "pos": 7247572,
+     "nor": 7314640
+    }
+   ],
+   "tri": 1863
+  },
+  {
+   "id": "pluma_1405",
+   "tag": "1313-CN-1405",
+   "padre": null,
+   "pivote": [
+    -35.19,
+    20.9,
+    22.189999999999998
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 18711,
+     "pos": 7331408,
+     "nor": 7555940
+    }
+   ],
+   "tri": 6237
+  },
+  {
+   "id": "m_1405",
+   "tag": "/^1313-CN-1405-M[1-4]$/",
+   "padre": "pluma_1405",
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 8904,
+     "pos": 7612076,
+     "nor": 7718924
+    }
+   ],
+   "tri": 2968
+  },
+  {
+   "id": "molino_1401_giro",
+   "tag": "1313-ML-1401",
+   "padre": "molino_1401",
+   "pivote": [
+    -8.39,
+    -0.406,
+    -8.29
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 7848,
+     "pos": 7745636,
+     "nor": 7839812
+    }
+   ],
+   "tri": 2616
+  },
+  {
+   "id": "molino_1401",
+   "tag": "1313-ML-1401",
+   "padre": null,
+   "pivote": [
+    -8.39,
+    -0.406,
+    -8.29
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 8856,
+     "pos": 7863356,
+     "nor": 7969628
+    }
+   ],
+   "tri": 2952
+  },
+  {
+   "id": "molino_1402_giro",
+   "tag": "1313-ML-1402",
+   "padre": "molino_1402",
+   "pivote": [
+    -8.39,
+    -0.406,
+    16.71
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 7848,
+     "pos": 7996196,
+     "nor": 8090372
+    }
+   ],
+   "tri": 2616
+  },
+  {
+   "id": "molino_1402",
+   "tag": "1313-ML-1402",
+   "padre": null,
+   "pivote": [
+    -8.39,
+    -0.406,
+    16.71
+   ],
+   "mallas": [
+    {
+     "color": 11119017,
+     "disciplina": "Mechanical",
+     "vert": 8856,
+     "pos": 8113916,
+     "nor": 8220188
+    }
+   ],
+   "tri": 2952
+  }
+ ]
+}

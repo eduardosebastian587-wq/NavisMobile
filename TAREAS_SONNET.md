@@ -5,7 +5,8 @@ Reglas: ejecutar en orden; 1 commit por tarea (`git commit -m "Tarea N: …"`); 
 no leer el `.glb` ni `node_modules`; respuestas breves.
 Rama de trabajo: `claude/dreamy-volta-6igg2d` (el plan dice `main`: no empujar a `main` sin permiso del usuario).
 
-## Estado (2026-11-17)
+## Estado (2026-11-17) — Tareas 1-23 hechas (ver notas); falta solo la 24
+Notas: iconos = los de Capacitor (base.apk no es público); PLAN_NavisBlend.md no es público (omitido); descarga real desde Drive no verificable en el Chromium de la nube (curl confirma CORS); falta prueba en teléfono.
 Hecho: `index.html`, `src/estilos.css`, `src/navegacion.js` (sin probar), `modelos_movil/area1313_movil.glb`, `.gitignore`.
 Pendiente: todo lo siguiente.
 

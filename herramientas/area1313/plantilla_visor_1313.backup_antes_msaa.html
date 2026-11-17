@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ÁREA 1313 – Recorrido virtual</title>
+<!--
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║  VISOR ÁREA 1313 · v1 (2026-10-30, base: visor Hito v3) · Three.js r170 · aspecto visor v4   ║
+║  Generado por herramientas/generar_visor_1313.py — NO editar este HTML: editar la plantilla   ║
+║  herramientas/plantilla_visor_1313.html o los datos de Blender y volver a generar.           ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║  Datos (todos medidos/extraídos, nada inventado):                                            ║
+║   · Modelo: Capas area 1313 + v4 → convertidos_blender/area1313_web.glb (Draco).           ║
+║     Equipos animados del v4.1 aparte: area1313_web_equipos.bin.                     ║
+║   · Recorridos: "optimizado 25 s" (planificado en espacio libre con holgura ≥ 3 m) y el      ║
+║     original del video (12 s). Campo de distancias para verificar recorridos propios.        ║
+║   · Materiales: color/metal/rugosidad/alfa del video; acabado (textura) asignable por grupo.  ║
+║  Realismo (mismo tipo que el visor v4 del Área 1313): PBR con barniz, variación de superficie,║
+║   vetas de intemperie, polvo del terreno en caras superiores, desgaste, patrones de rejilla,  ║
+║   plancha y hormigón, cielo físico + reflejos con disco solar, relleno y contraluz, sombras   ║
+║   suaves, oclusión ambiental (GTAO) y tono ACES / Khronos PBR Neutral.                       ║
+║  Parámetros URL: ?modelo= ?calidad=auto|alta|media|baja ?auto=0 ?titulo=0 ?recorrido=<id>     ║
+║                  ?panel=0 ?limpio=1 ?prueba=1                                                ║
+║  Correas: ?correas=0 (quietas) ?velcorrea=3 (m/s) ?carga=0 ?cubiertas=0.1 (opacidad)         ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+-->
+<style>
+  :root{--cian:#22d3ee;--rosa:#ec4899;--bg:#0f172a;--panel:#0b1220e6;--borde:#334155;--txt:#e2e8f0;--sub:#94a3b8}
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
+  canvas{display:block;position:fixed;inset:0;outline:none}
+  /* ---------- encabezado y pie (formato corporativo) ---------- */
+  #cab{position:fixed;left:0;right:0;top:0;padding:14px 28px 18px;background:linear-gradient(#0b1220f2 0%,#0b1220c8 60%,#0b122000 100%);pointer-events:none;transition:opacity .4s;z-index:3}
+  #cab .fila{display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--cian);padding-top:10px}
+  #cab h1{font-size:clamp(16px,2.2vw,28px);letter-spacing:.06em;font-weight:700}
+  #cab .ins{background:#fff;color:#0b1d3a;font-weight:800;padding:6px 16px;border-radius:4px;letter-spacing:.08em;font-size:clamp(12px,1.3vw,17px)}
+  #cab .sub{margin-top:4px;color:#cbd5e1;font-size:clamp(11px,1.1vw,14px)}
+  #pie{position:fixed;left:0;right:0;bottom:0;pointer-events:none;transition:opacity .4s;z-index:3}
+  #pie .txt{text-align:center;font-size:clamp(10px,1vw,13px);color:#cbd5e1;padding:6px 10px 8px;background:#0b1220cc}
+  #pie .barra{height:5px;background:linear-gradient(90deg,var(--cian),var(--rosa))}
+  /* ---------- panel lateral ---------- */
+  .vidrio{background:var(--panel);border:1px solid var(--borde);border-radius:12px;backdrop-filter:blur(6px);box-shadow:0 10px 30px #0008}
+  #panel{position:fixed;left:14px;top:96px;bottom:46px;width:340px;display:flex;flex-direction:column;z-index:4;transition:transform .3s}
+  #panel.plegado{transform:translateX(-360px)}
+  #panel .cabeza{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--borde)}
+  #panel .cabeza b{font-size:13px;letter-spacing:.08em;color:var(--cian)}
+  #panel .cuerpo{overflow-y:auto;padding:8px 12px 14px;flex:1}
+  #panel .cuerpo::-webkit-scrollbar{width:8px} #panel .cuerpo::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+  #lengueta{position:fixed;left:0;top:50%;z-index:5;display:none;background:#0e7490;border:0;color:#fff;padding:14px 6px;border-radius:0 8px 8px 0;cursor:pointer}
+  #panel.plegado ~ #lengueta{display:block}
+  details{border-bottom:1px solid #1e293b;padding:6px 0}
+  summary{cursor:pointer;font-weight:600;font-size:13.5px;padding:6px 2px;list-style:none;display:flex;justify-content:space-between}
+  summary::after{content:'▸';color:var(--sub)} details[open]>summary::after{content:'▾'}
+  .det{padding:6px 2px 4px;display:flex;flex-direction:column;gap:7px;font-size:12.5px}
+  .btn{background:#1e293b;color:var(--txt);border:1px solid #475569;border-radius:7px;padding:7px 10px;cursor:pointer;font-size:12.5px;display:inline-flex;gap:6px;align-items:center;justify-content:center}
+  .btn:hover{border-color:var(--cian)} .btn.on,.btn.primario{background:#0e7490;border-color:var(--cian)} .btn:disabled{opacity:.45;cursor:default}
+  .botonera{display:grid;grid-template-columns:1fr 1fr;gap:6px} .botonera.tres{grid-template-columns:1fr 1fr 1fr} .botonera.una{grid-template-columns:1fr}
+  .fila{display:grid;grid-template-columns:96px 1fr 46px;gap:8px;align-items:center}
+  .fila output{text-align:right;color:var(--sub);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--cian)}
+  select,input[type=number],input[type=text]{background:#0f172a;color:var(--txt);border:1px solid #475569;border-radius:6px;padding:5px 6px;font-size:12.5px;width:100%}
+  label.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+  .nota{color:var(--sub);font-size:11.5px;line-height:1.45}
+  .aviso{color:#fbbf24} .ok{color:#4ade80} .mal{color:#f87171}
+  .progreso{height:5px;background:#1e293b;border-radius:3px;overflow:hidden;margin:6px 0 2px} .progreso i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cian),var(--rosa))}
+  #tiempoFila{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center}
+  #tiempoTxt{font-variant-numeric:tabular-nums;color:var(--sub);text-align:right;font-size:12px}
+  .lista{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto}
+  .clave{display:grid;grid-template-columns:22px 64px 1fr 26px 26px;gap:5px;align-items:center;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:4px 6px;font-size:11.5px}
+  .clave input{padding:3px 4px} .clave button{padding:2px 0;font-size:12px}
+  .mat{display:grid;grid-template-columns:18px 18px 1fr auto;gap:7px;align-items:center;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:5px 6px;cursor:pointer;font-size:11.5px}
+  .mat.sel{border-color:var(--cian)} .mat i{width:16px;height:16px;border-radius:3px;border:1px solid #fff4;display:block}
+  .mat small{color:var(--sub)}
+  #editorMat{border:1px solid var(--borde);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .atajos{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px} kbd{background:#1e293b;border:1px solid #475569;border-radius:4px;padding:1px 6px;font-size:11px}
+  /* ---------- controles inferiores, HUD y carga ---------- */
+  #ctl{position:fixed;left:50%;bottom:52px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:8px 12px;z-index:4;transition:opacity .4s}
+  #ctl .t{font-variant-numeric:tabular-nums;min-width:86px;text-align:center;font-size:13px;color:var(--sub)}
+  #ctl input[type=range]{width:min(30vw,340px)}
+  #hud{position:fixed;right:12px;bottom:104px;font:12px/1.4 Consolas,monospace;color:var(--sub);background:#0b1220b3;padding:4px 8px;border-radius:6px;pointer-events:none;z-index:4}
+  #carga{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20;transition:opacity .6s}
+  #carga .b{width:min(60vw,420px);height:8px;background:#1e293b;border-radius:4px;overflow:hidden}
+  #carga .b i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cian),var(--rosa));transition:width .2s}
+  #etapa{color:#cbd5e1;font-size:14px} #msg{max-width:70vw;text-align:center;color:#fca5a5;font-size:14px;line-height:1.5}
+  #grabando{position:fixed;inset:0;background:#0f172ae0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+  #grabando .b{width:min(60vw,460px);height:10px;background:#1e293b;border-radius:5px;overflow:hidden} #grabando .b i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cian),var(--rosa))}
+  #toast{position:fixed;left:50%;top:110px;transform:translateX(-50%);background:#0e7490;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;z-index:40;opacity:0;transition:opacity .3s;pointer-events:none;max-width:70vw;text-align:center}
+  body.limpio #ctl,body.limpio #hud,body.limpio #panel,body.limpio #lengueta{display:none}
+</style>
+</head>
+<body>
+<div id="carga"><div style="font-size:20px;font-weight:600">ÁREA 1313 – Cargando modelo…</div><div class="b"><i id="prog"></i></div><div id="etapa">Descargando geometría…</div><div id="msg"></div></div>
+
+<div id="cab">
+  <div class="fila"><h1>ÁREA 1313 · MOLINOS – RECORRIDO VIRTUAL</h1><div class="ins">FLUOR | SALFA</div></div>
+  <div class="sub">Nueva Centinela · Animación 3D de planta</div>
+</div>
+<div id="pie"><div class="txt" id="credito"></div><div class="barra"></div></div>
+
+<aside id="panel" class="vidrio" aria-label="Opciones del visor">
+  <div class="cabeza"><b>OPCIONES</b><button class="btn" id="bPlegar" title="Ocultar panel (H)">◂</button></div>
+  <div class="cuerpo">
+    <div class="botonera tres">
+      <button class="btn primario" id="bPlay" title="Iniciar / pausar (Espacio)">▶ Iniciar</button>
+      <button class="btn" id="bRst" title="Vista original (R)">🔄 Inicio</button>
+      <button class="btn" id="bLib" title="Cámara libre con el mouse (O)">🖱 Libre</button>
+    </div>
+    <div class="progreso"><i id="barraRec"></i></div>
+
+    <details open id="secRecorrido"><summary>Recorrido</summary><div class="det">
+      <select id="selRec" aria-label="Recorrido activo"></select>
+      <div class="nota" id="infoRec"></div>
+      <div id="tiempoFila"><input id="tl" type="range" min="0" max="25" step="0.0333" value="0" aria-label="Línea de tiempo"><span id="tiempoTxt">0.0 / 25.0 s</span></div>
+      <label class="fila">Velocidad <input id="vel" type="range" min="0.25" max="3" step="0.25" value="1"><output id="velO">1.0×</output></label>
+      <select id="selBucle"><option value="una">Reproducir una vez</option><option value="bucle">Repetir en bucle</option><option value="vaiven">Vaivén (ida y vuelta)</option></select>
+      <label class="chk"><input type="checkbox" id="chkRuta"> Mostrar trayectoria de la cámara</label>
+    </div></details>
+
+    <details id="secEditor"><summary>Crear y descargar recorrido</summary><div class="det">
+      <div class="nota">1) Pulse «🖱 Libre» y ubique la cámara. 2) «Agregar punto» guarda la posición y el punto al que mira. 3) Ajuste los segundos de cada punto. 4) Verifique interferencias y descargue.</div>
+      <input type="text" id="nomRec" value="Mi recorrido" aria-label="Nombre del recorrido">
+      <div class="botonera">
+        <button class="btn primario" id="bAddClave" title="Agregar la vista actual (A)">➕ Agregar punto</button>
+        <button class="btn" id="bVerRec">▶ Previsualizar</button>
+      </div>
+      <div class="lista" id="listaClaves"></div>
+      <label class="fila">Holgura mín. <input id="holg" type="range" min="1" max="6" step="0.5" value="3"><output id="holgO">3.0 m</output></label>
+      <div class="botonera">
+        <button class="btn" id="bVerificar" title="Revisa que la cámara no choque ni atraviese elementos">🛡 Verificar</button>
+        <button class="btn" id="bCorregir" title="Aleja la cámara de los elementos y suaviza">🔧 Corregir</button>
+      </div>
+      <div class="nota" id="resVerif"></div>
+      <div class="botonera">
+        <button class="btn" id="bDescJSON">💾 Recorrido (.json)</button>
+        <button class="btn" id="bCargJSON">📥 Cargar (.json)</button>
+      </div>
+      <input type="file" id="fileRec" accept=".json,application/json" hidden>
+      <label class="fila">Video <select id="selRes"><option value="1280x720">1280 × 720 (HD)</option><option value="1920x1080" selected>1920 × 1080 (Full HD)</option><option value="3840x2160">3840 × 2160 (4K, lento)</option></select><span></span></label>
+      <label class="chk"><input type="checkbox" id="chkTitVid" checked> Incluir título y pie en el video</label>
+      <div class="botonera una"><button class="btn primario" id="bVideo">🎬 Descargar video del recorrido activo (.mp4)</button></div>
+      <button class="btn" id="bLimpiar">🧹 Borrar puntos del editor</button>
+    </div></details>
+
+    <details id="secMat"><summary>Materiales y capas</summary><div class="det">
+      <div class="nota">Cada grupo es un color de Navisworks. Clic para editar su acabado. La casilla muestra u oculta el grupo.</div>
+      <div class="lista" id="listaMat" style="max-height:260px"></div>
+      <div id="editorMat" hidden>
+        <b id="emTitulo" style="font-size:12.5px"></b>
+        <label class="fila">Acabado <select id="emAcabado"></select><span></span></label>
+        <label class="fila">Color <input type="color" id="emColor"><span></span></label>
+        <label class="fila">Metálico <input id="emMetal" type="range" min="0" max="1" step="0.01"><output id="emMetalO"></output></label>
+        <label class="fila">Rugosidad <input id="emRug" type="range" min="0.02" max="1" step="0.01"><output id="emRugO"></output></label>
+        <label class="fila">Opacidad <input id="emAlfa" type="range" min="0.1" max="1" step="0.01"><output id="emAlfaO"></output></label>
+        <label class="fila">Textura <input id="emTex" type="range" min="0" max="2" step="0.05"><output id="emTexO"></output></label>
+        <label class="fila">Polvo <input id="emPolvo" type="range" min="0" max="2" step="0.05"><output id="emPolvoO"></output></label>
+        <button class="btn" id="emRestab">↺ Restablecer este grupo</button>
+      </div>
+      <div class="botonera">
+        <button class="btn" id="bDescMat">💾 Materiales (.json)</button>
+        <button class="btn" id="bCargMat">📥 Cargar (.json)</button>
+      </div>
+      <input type="file" id="fileMat" accept=".json,application/json" hidden>
+      <button class="btn" id="bRestabMat">↺ Restablecer todos los materiales</button>
+    </div></details>
+
+    <details id="secRender"><summary>Render y luz</summary><div class="det">
+      <label class="fila">Calidad <select id="selCal"><option value="auto">Automática</option><option value="alta">Alta (AO siempre)</option><option value="media">Media (AO en pausa)</option><option value="baja">Baja (rápida)</option></select><span></span></label>
+      <label class="fila">Tono <select id="selTono"><option value="aces">ACES Filmic (visor v4)</option><option value="neutral">Khronos PBR Neutral (video)</option></select><span></span></label>
+      <label class="fila">Exposición <input id="expo" type="range" min="0.3" max="2" step="0.05"><output id="expoO"></output></label>
+      <label class="fila">Reflejos <input id="refl" type="range" min="0" max="2" step="0.05" value="1"><output id="reflO">1.00</output></label>
+      <label class="fila">Sol azimut <input id="az" type="range" min="0" max="360" step="1"><output id="azO"></output></label>
+      <label class="fila">Sol altura <input id="el" type="range" min="5" max="85" step="1"><output id="elO"></output></label>
+      <label class="fila">Polvo global <input id="polvoG" type="range" min="0" max="2" step="0.05" value="1"><output id="polvoGO">1.00</output></label>
+      <label class="chk"><input type="checkbox" id="chkReal" checked> Texturas y acabado realista</label>
+      <label class="chk"><input type="checkbox" id="chkSombras" checked> Sombras</label>
+      <label class="chk"><input type="checkbox" id="chkGrua" checked> Animar los equipos (molinos, pórtico CN-1406, pescantes)</label>
+      <label class="chk"><input type="checkbox" id="chkNiebla" checked> Perspectiva aérea (horizonte)</label>
+    </div></details>
+
+    <details id="secCorreas" style="display:none"><summary>Correas transportadoras</summary><div class="det">
+      <div class="nota" id="infoCorreas"></div>
+      <label class="chk"><input type="checkbox" id="chkCorreas" checked> Correas en funcionamiento (bandas en movimiento)</label>
+      <label class="fila">Vel. banda <input id="velBanda" type="range" min="0.5" max="6" step="0.1" value="3"><output id="velBandaO">3.0 m/s</output></label>
+      <label class="chk"><input type="checkbox" id="chkCarga" checked> Mineral sobre la cinta de carga</label>
+      <label class="fila">Cubiertas <input id="opCub" type="range" min="0" max="1" step="0.05" value="0.1"><output id="opCubO">10 %</output></label>
+      <div class="nota">Las capotas tapan la cinta de carga: con opacidad baja se ve la banda en marcha (10 % en el recorrido de las correas). 100 % = como en la planta.</div>
+    </div></details>
+
+    <details id="secSueltos"><summary>Elementos sueltos</summary><div class="det">
+      <div class="nota" id="infoSueltos"></div>
+      <label class="chk"><input type="checkbox" id="chkSueltos"> Mostrar los elementos eliminados (en rojo)</label>
+    </div></details>
+
+    <details><summary>Atajos y ayuda</summary><div class="det atajos">
+      <kbd>Espacio</kbd><span>Iniciar / pausar</span><kbd>R</kbd><span>Volver al inicio del recorrido</span>
+      <kbd>O</kbd><span>Cámara libre</span><kbd>A</kbd><span>Agregar punto al editor</span>
+      <kbd>← →</kbd><span>±1 s</span><kbd>C</kbd><span>Calidad</span><kbd>T</kbd><span>Título</span><kbd>H</kbd><span>Ocultar panel</span>
+      <kbd>Arrastrar</kbd><span>Orbitar (libre)</span><kbd>Rueda</kbd><span>Acercar / alejar</span>
+    </div></details>
+  </div>
+</aside>
+<button id="lengueta" title="Mostrar panel (H)">▸</button>
+
+<div id="ctl" class="vidrio">
+  <button class="btn" id="bPlay2" title="Espacio">⏸</button>
+  <input id="sl" type="range" min="0" max="25" step="0.0333" value="0" aria-label="Tiempo">
+  <span class="t" id="tt">0.0 / 25.0 s</span>
+  <button class="btn" id="bTit" title="T">Título</button>
+</div>
+<div id="hud"></div>
+<div id="grabando"><div style="font-size:18px;font-weight:600">🎬 Generando video del recorrido…</div><div class="b"><i id="progVid"></i></div><div id="txtVid" class="nota"></div><button class="btn" id="bCancelVid">Cancelar</button></div>
+<div id="toast"></div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {Sky} from 'three/addons/objects/Sky.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {GTAOPass} from 'three/addons/postprocessing/GTAOPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+
+const $ = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+const PRUEBA = Q.get('prueba') === '1';
+function aviso(t, ms = 3200) { const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(aviso.h); aviso.h = setTimeout(() => e.style.opacity = 0, ms); }
+const guardarLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const leerLS = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+function descargar(nombre, datos, tipo) {
+  const url = URL.createObjectURL(datos instanceof Blob ? datos : new Blob([datos], {type: tipo || 'application/json'}));
+  const a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+const nombreArchivo = s => (s || 'recorrido').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'recorrido';
+
+// =====================================================================================================
+// 1) DATOS GENERADOS (generar_visor_hito.py)
+// =====================================================================================================
+const VIDEO = __VIDEO__;
+const RECORRIDOS_BASE = __RECORRIDOS__;
+const SUELTOS = __SUELTOS__;
+const CONFIG = {
+  AUTOR: 'Eduardo Regla', ROL: 'Especialista en Puesta en Marcha Mecánico', EMPRESA: 'Fluor-Salfa', PROYECTO: 'Nueva Centinela',
+  MODELO: Q.get('modelo') || 'convertidos_blender/area1313_web.glb',
+  RELLENO: null,                                             // Área 1313: el terreno se usa tal como viene de Navisworks
+  EQUIPOS_BIN: 'convertidos_blender/area1313_web_equipos.bin', // piezas animadas (unir_capas_1313.py)   // triángulos que cierran los huecos del terreno (rellenar_terreno.py)
+  SUELTOS_GLB: null,
+  DISTANCIAS: 'convertidos_blender/area1313_recorrido_distancias.bin',
+  DRACO: 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/',
+  MP4: 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs',
+};
+$('credito').textContent = `Animación generada por ${CONFIG.AUTOR} • ${CONFIG.ROL} • ${CONFIG.EMPRESA} • ${CONFIG.PROYECTO}`;
+
+// =====================================================================================================
+// 2) BIBLIOTECA DE ACABADOS (textura procedural + barniz). Valores de color/metal/rugosidad: los del video.
+//    patron: 0 liso · 1 galvanizado (lentejuela) · 2 rejilla de piso · 3 plancha acanalada · 4 hormigón ·
+//            5 translúcido · 6 goma/HDPE · 9 terreno (sombreador del video)
+// =====================================================================================================
+const ACABADOS = {
+  acero_pintado:     {nombre: 'Acero pintado (esmalte)',      patron: 0, barniz: 0.35, varA: 0.10, varR: 0.16, vetas: 0.16, desgaste: 0.10, piel: 1.0, polvo: 0.55},
+  pintura_seguridad: {nombre: 'Pintura de seguridad (amarilla)', patron: 0, barniz: 0.45, varA: 0.08, varR: 0.14, vetas: 0.14, desgaste: 0.20, piel: 1.0, polvo: 0.45},
+  tuberia:           {nombre: 'Tubería / equipo pintado',     patron: 0, barniz: 0.55, varA: 0.07, varR: 0.12, vetas: 0.12, desgaste: 0.06, piel: 0.8, polvo: 0.40},
+  galvanizado:       {nombre: 'Acero galvanizado',            patron: 1, barniz: 0.00, varA: 0.12, varR: 0.22, vetas: 0.10, desgaste: 0.00, piel: 0.0, polvo: 0.55},
+  rejilla:           {nombre: 'Rejilla de piso galvanizada',  patron: 2, barniz: 0.00, varA: 0.10, varR: 0.20, vetas: 0.06, desgaste: 0.00, piel: 0.0, polvo: 0.60},
+  chapa:             {nombre: 'Plancha de cubierta acanalada', patron: 3, barniz: 0.20, varA: 0.06, varR: 0.12, vetas: 0.22, desgaste: 0.00, piel: 0.0, polvo: 0.50},
+  hormigon:          {nombre: 'Hormigón',                     patron: 4, barniz: 0.00, varA: 0.18, varR: 0.08, vetas: 0.18, desgaste: 0.00, piel: 0.0, polvo: 0.35},
+  translucido:       {nombre: 'Policarbonato / vidrio',       patron: 5, barniz: 0.00, varA: 0.00, varR: 0.03, vetas: 0.05, desgaste: 0.00, piel: 0.0, polvo: 0.15},
+  goma:              {nombre: 'Goma / HDPE',                  patron: 6, barniz: 0.00, varA: 0.07, varR: 0.10, vetas: 0.08, desgaste: 0.00, piel: 0.0, polvo: 0.40},
+  v4:                {nombre: 'Visor v4 (PBR por disciplina y color)', patron: 0, barniz: 0, varA: 0, varR: 0, vetas: 0, desgaste: 0, piel: 0, polvo: 0},
+  terreno:           {nombre: 'Terreno (sombreador del video)', patron: 9, barniz: 0.00, varA: 0, varR: 0, vetas: 0, desgaste: 0, piel: 0, polvo: 0},
+};
+// Asignación inicial por grupo de color (editable en «Materiales y capas»; se puede guardar/cargar en JSON)
+const ASIGNACION_INICIAL = {
+  MAT_008000: 'acero_pintado', MAT_8080FF: 'acero_pintado', MAT_00F2F2: 'acero_pintado', MAT_3A5484: 'acero_pintado',
+  MAT_0000FF: 'acero_pintado', MAT_5999D9: 'acero_pintado', MAT_0080FF: 'galvanizado', MAT_00F200: 'rejilla',
+  MAT_FFFF00: 'pintura_seguridad', MAT_A2A2A2: 'hormigon', MAT_BFBFBF: 'hormigon',
+  MAT_FF00FF: 'tuberia', MAT_BA00BA: 'tuberia', MAT_FF51FF: 'tuberia', MAT_400080: 'tuberia', MAT_FF8000: 'tuberia',
+  MAT_0080C0_A50: 'chapa', MAT_C6B88D: 'terreno',
+};
+const acabadoInicial = (id, alfa) => ASIGNACION_INICIAL[id] || (alfa < 1 ? 'translucido' : 'acero_pintado');
+
+// =====================================================================================================
+// 3) RENDERIZADOR, ESCENA, CÁMARA, CIELO Y LUCES
+// =====================================================================================================
+const renderer = new THREE.WebGLRenderer({antialias: false, powerPreference: 'high-performance', stencil: false, preserveDrawingBuffer: false});
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
+document.body.prepend(renderer.domElement);
+const TONOS = {aces: {map: THREE.ACESFilmicToneMapping, expo: 0.85}, neutral: {map: THREE.NeutralToneMapping, expo: Math.pow(2, VIDEO.exposicion_ev)}};
+const luz = {tono: 'aces', expo: TONOS.aces.expo, reflejos: 1, polvo: 1, real: 1};
+
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(50, 1, 0.3, 20000);
+const controls = new OrbitControls(cam, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enabled = false;
+controls.minDistance = 1; controls.maxDistance = 3000; controls.maxPolarAngle = Math.PI * 0.497; controls.zoomToCursor = true;
+function fovVertical(aspect) {                       // lente 28 mm / sensor 36 mm con ajuste AUTO (como Blender)
+  const medio = Math.atan((VIDEO.sensor_mm / 2) / VIDEO.lente_mm);
+  return THREE.MathUtils.radToDeg(aspect >= 1 ? 2 * Math.atan(Math.tan(medio) / aspect) : 2 * medio);
+}
+
+// Sol: la suma de los dos soles del video, en la dirección del sol del cielo (38°).
+const solCielo = VIDEO.soles.reduce((a, b) => Math.abs(Math.asin(b.dir[1]) * 180 / Math.PI - VIDEO.cielo.elevacion) < Math.abs(Math.asin(a.dir[1]) * 180 / Math.PI - VIDEO.cielo.elevacion) ? b : a);
+const ENERGIA_SOL = VIDEO.soles.reduce((s, x) => s + x.energia, 0);
+const sd = new THREE.Vector3(...solCielo.dir).normalize();
+luz.az = (THREE.MathUtils.radToDeg(Math.atan2(sd.x, sd.z)) + 360) % 360;
+luz.el = THREE.MathUtils.radToDeg(Math.asin(sd.y));
+const dirSol = () => { const a = THREE.MathUtils.degToRad(luz.az), h = THREE.MathUtils.degToRad(luz.el);
+  return new THREE.Vector3(Math.sin(a) * Math.cos(h), Math.sin(h), Math.cos(a) * Math.cos(h)); };
+
+const sky = new Sky(); sky.scale.setScalar(10000);
+const U = sky.material.uniforms;
+U.turbidity.value = 2.2; U.rayleigh.value = 1.0; U.mieCoefficient.value = 0.003; U.mieDirectionalG.value = 0.7;
+const UCIELO = {value: 0.55};                          // brillo del cielo visible (azul profundo del desierto con tono ACES)
+sky.material.onBeforeCompile = sh => { sh.uniforms.uCieloK = UCIELO;
+  sh.fragmentShader = 'uniform float uCieloK;\n' + sh.fragmentShader.replace('#include <tonemapping_fragment>', 'gl_FragColor.rgb *= uCieloK;\n#include <tonemapping_fragment>'); };
+scene.add(sky);
+const COLOR_HORIZONTE = new THREE.Color(0xc9d6e3);
+scene.fog = new THREE.FogExp2(COLOR_HORIZONTE, 0.00022);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+let envRT = null;
+function actualizarEntorno() {                         // cielo + disco solar brillante (reflejos nítidos en metal, como v4)
+  const e = new THREE.Scene();
+  const s2 = new Sky(); s2.scale.setScalar(1000); s2.material.uniforms.sunPosition.value.copy(dirSol());
+  for (const k of ['turbidity', 'rayleigh', 'mieCoefficient', 'mieDirectionalG']) s2.material.uniforms[k].value = U[k].value;
+  e.add(s2);
+  const disco = new THREE.Mesh(new THREE.SphereGeometry(12, 16, 8), new THREE.MeshBasicMaterial({color: new THREE.Color(1, 0.95, 0.85).multiplyScalar(60)}));
+  disco.position.copy(dirSol()).multiplyScalar(400); e.add(disco);
+  const suelo = new THREE.Mesh(new THREE.CircleGeometry(900, 32), new THREE.MeshBasicMaterial({color: new THREE.Color(VIDEO.terreno.rampa[1]).multiplyScalar(0.5)}));
+  suelo.rotation.x = -Math.PI / 2; suelo.position.y = -2; e.add(suelo);     // rebote del terreno en los reflejos
+  const prev = envRT; envRT = pmrem.fromScene(e, 0, 1, 5000); scene.environment = envRT.texture;
+  if (prev) prev.dispose();
+  scene.environmentIntensity = 1.2 * luz.reflejos;
+}
+const sol = new THREE.DirectionalLight(0xfff4e0, ENERGIA_SOL);
+sol.castShadow = true; sol.shadow.mapSize.set(4096, 4096);
+sol.shadow.bias = -0.0008; sol.shadow.normalBias = 0.35; sol.shadow.radius = 2;
+scene.add(sol, sol.target);
+const hemi = new THREE.HemisphereLight(0xbfd4f2, new THREE.Color(VIDEO.terreno.rampa[1]), 0.45);   // cielo / rebote del terreno
+const relleno = new THREE.DirectionalLight(0x93c5fd, 0.45);       // relleno frío opuesto al sol (v4)
+const contraluz = new THREE.DirectionalLight(0xe0f2fe, 0.8);      // contraluz que perfila aristas (v4)
+scene.add(hemi, relleno, contraluz);
+const cajaPlanta = new THREE.Box3();
+function aplicarSol() {
+  const d = dirSol(); U.sunPosition.value.copy(d);
+  const c = cajaPlanta.isEmpty() ? new THREE.Vector3() : cajaPlanta.getCenter(new THREE.Vector3());
+  sol.position.copy(c).addScaledVector(d, 1500); sol.target.position.copy(c); sol.target.updateMatrixWorld(); sol.updateMatrixWorld();
+  relleno.position.set(-d.x, 0.6, -d.z); contraluz.position.set(-d.z, 0.35, d.x);
+  if (!cajaPlanta.isEmpty()) {
+    const esq = []; for (const x of [cajaPlanta.min.x, cajaPlanta.max.x]) for (const y of [cajaPlanta.min.y, cajaPlanta.max.y]) for (const z of [cajaPlanta.min.z, cajaPlanta.max.z]) esq.push(new THREE.Vector3(x, y, z));
+    const inv = new THREE.Matrix4().lookAt(sol.position, c, new THREE.Vector3(0, 1, 0)); const q = new THREE.Matrix4().extractRotation(inv).invert();
+    const b = new THREE.Box3(); for (const e of esq) b.expandByPoint(e.sub(sol.position).applyMatrix4(q));
+    const sc = sol.shadow.camera; sc.left = b.min.x - 2; sc.right = b.max.x + 2; sc.bottom = b.min.y - 2; sc.top = b.max.y + 2;
+    sc.near = Math.max(1, -b.max.z - 5); sc.far = -b.min.z + 5; sc.updateProjectionMatrix();
+  }
+  actualizarEntorno(); renderer.shadowMap.needsUpdate = true; marcar();
+}
+
+// =====================================================================================================
+// 4) SOMBREADORES: acabado realista (todas las piezas) y terreno (réplica del video)
+// =====================================================================================================
+const UG = {real: {value: 1}, polvoG: {value: 1}, colPolvo: {value: new THREE.Color(VIDEO.terreno.rampa[1])}};
+const GLSL_COMUN = /* glsl */`
+  varying vec3 vPosW;
+  float h31(vec3 p){ p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+  float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+    float a = mix(mix(h31(i), h31(i + vec3(1.,0.,0.)), f.x), mix(h31(i + vec3(0.,1.,0.)), h31(i + vec3(1.,1.,0.)), f.x), f.y);
+    float b = mix(mix(h31(i + vec3(0.,0.,1.)), h31(i + vec3(1.,0.,1.)), f.x), mix(h31(i + vec3(0.,1.,1.)), h31(i + vec3(1.,1.,1.)), f.x), f.y);
+    return mix(a, b, f.z); }
+  // ruido que se apaga cuando su detalle es menor que un píxel (sin parpadeo a distancia)
+  float vnF(vec3 p){ float w = length(fwidth(p)); return mix(vn(p), 0.5, smoothstep(0.35, 1.0, w)); }
+  // tren de pulsos filtrado (rejilla, nervios): cobertura media exacta dentro del píxel
+  float pulso(float x, float a){ float w = max(fwidth(x), 1e-4); float x0 = x - 0.5 * w, x1 = x + 0.5 * w;
+    float F0 = floor(x0) * a + clamp(fract(x0) - (1.0 - a), 0.0, a); float F1 = floor(x1) * a + clamp(fract(x1) - (1.0 - a), 0.0, a);
+    return (F1 - F0) / w; }
+  vec3 perturbarNormal(vec3 pos, vec3 nrm, vec2 dHdxy, float cara){
+    vec3 dx = dFdx(pos), dy = dFdy(pos); vec3 n = normalize(nrm);
+    vec3 r1 = cross(dy, n), r2 = cross(n, dx); float det = dot(dx, r1) * cara;
+    vec3 g = sign(det) * (dHdxy.x * r1 + dHdxy.y * r2);
+    return normalize(abs(det) * n - g); }`;
+function parchearAcabado(mat, ent) {
+  const A = ACABADOS[ent.acabado];
+  mat.userData.u = {uTex: {value: ent.textura}, uPolvo: {value: ent.polvo * A.polvo}, uVarA: {value: A.varA}, uVarR: {value: A.varR},
+                    uVetas: {value: A.vetas}, uDesg: {value: A.desgaste}, uPiel: {value: A.piel}};
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, mat.userData.u, {uReal: UG.real, uPolvoG: UG.polvoG, uColPolvo: UG.colPolvo});
+    sh.vertexShader = 'varying vec3 vPosW;\n' + sh.vertexShader.replace('#include <worldpos_vertex>',
+      '#include <worldpos_vertex>\n vPosW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = `#define PATRON ${A.patron}\nuniform float uTex, uPolvo, uVarA, uVarR, uVetas, uDesg, uPiel, uReal, uPolvoG;\nuniform vec3 uColPolvo;\n`
+      + GLSL_COMUN + '\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        vec3 nG = normalize(cross(dFdx(vPosW), dFdy(vPosW)));
+        if (dot(nG, cameraPosition - vPosW) < 0.0) nG = -nG;
+        float kT = uReal * uTex; vec3 pW = vPosW;
+        float nA = vnF(pW * 1.7) * 0.65 + vnF(pW * 9.0) * 0.35;
+        float vet = vnF(vec3(pW.x * 2.2, pW.y * 0.22, pW.z * 2.2));
+        float mR = 0.0, mM = 0.0, hN = 0.0;
+        diffuseColor.rgb *= 1.0 - kT * (uVarA * 2.0 * (nA - 0.5) + uVetas * smoothstep(0.55, 0.95, vet));
+        #if PATRON == 1
+          float lj = vnF(pW * 16.0); diffuseColor.rgb *= 1.0 + kT * 0.16 * (lj - 0.5); mR += kT * (0.15 + 0.25 * (lj - 0.5));
+        #elif PATRON == 2
+          float sup = smoothstep(0.7, 0.92, abs(nG.y));
+          float barra = max(pulso(pW.x / 0.034, 0.16), pulso(pW.z / 0.10, 0.10));
+          diffuseColor.rgb *= mix(1.0, mix(0.30, 1.05, barra), sup * min(kT, 1.0)); mR += sup * kT * 0.15 * (1.0 - barra);
+        #elif PATRON == 3
+          float uC = abs(nG.x) > abs(nG.z) ? pW.z : pW.x; hN = 0.018 * sin(6.2831853 * uC / 0.20) * smoothstep(0.6, 0.2, fwidth(uC / 0.20)) * kT;
+        #elif PATRON == 4
+          float man = vnF(pW * 0.35) * 0.6 + vnF(pW * 3.0) * 0.4; diffuseColor.rgb *= 1.0 + kT * 0.26 * (man - 0.5);
+          float poro = smoothstep(0.80, 0.90, vnF(pW * 35.0)); diffuseColor.rgb *= 1.0 - kT * 0.25 * poro; hN = -0.002 * poro * kT;
+        #elif PATRON == 6
+          diffuseColor.rgb *= 1.0 + kT * 0.08 * (vnF(pW * 4.0) - 0.5);
+        #endif
+        #if PATRON == 0
+          float chip = smoothstep(0.80, 0.86, vnF(pW * 4.5) * 0.7 + vnF(pW * 21.0) * 0.3) * uDesg * kT;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.16, 0.15, 0.14), chip); mM += chip * 0.5; mR += chip * 0.25;
+          hN += uPiel * 0.0006 * vnF(pW * 70.0) * kT;
+        #endif
+        float sup2 = smoothstep(0.45, 0.9, nG.y);
+        float pol = clamp(sup2 * smoothstep(0.2, 0.75, vnF(pW * 0.9) * 0.7 + vnF(pW * 5.0) * 0.3) * uPolvo * uPolvoG * uReal, 0.0, 1.0);
+        diffuseColor.rgb = mix(diffuseColor.rgb, uColPolvo, pol * 0.8);`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + kT * uVarR * 2.0 * (nA - 0.5) + kT * 0.10 * smoothstep(0.55, 0.95, vet) + mR + pol * 0.6, 0.03, 1.0);`)
+      .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+        metalnessFactor = clamp(mix(metalnessFactor + mM, 0.0, pol), 0.0, 1.0);`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        normal = perturbarNormal(-vViewPosition, normal, vec2(dFdx(hN), dFdy(hN)), faceDirection);`);
+  };
+  mat.customProgramCacheKey = () => 'hito-acabado-' + A.patron + (mat.isMeshPhysicalMaterial ? 'F' : 'S');
+}
+function materialTerreno() {
+  const T = VIDEO.terreno;
+  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: T.rugosidad, metalness: 0, side: THREE.DoubleSide});
+  m.onBeforeCompile = sh => {
+    sh.uniforms.cTerr0 = {value: new THREE.Color(T.rampa[0])}; sh.uniforms.cTerr1 = {value: new THREE.Color(T.rampa[1])}; sh.uniforms.uReal = UG.real;
+    sh.vertexShader = 'varying vec3 vPosObj;\nvarying vec3 vPosW;\n' + sh.vertexShader.replace('#include <worldpos_vertex>',
+      '#include <worldpos_vertex>\n vPosObj = position; vPosW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform vec3 cTerr0; uniform vec3 cTerr1; uniform float uReal;\nvarying vec3 vPosObj;\n' + GLSL_COMUN + `
+      uvec3 pcg3d(uvec3 v){ v=v*1664525u+1013904223u; v.x+=v.y*v.z; v.y+=v.z*v.x; v.z+=v.x*v.y; v^=v>>16u; v.x+=v.y*v.z; v.y+=v.z*v.x; v.z+=v.x*v.y; return v; }
+      vec3 g3(vec3 p){ uvec3 h=pcg3d(uvec3(ivec3(p)+ivec3(1048576))); return vec3(h)*(2.0/4294967295.0)-1.0; }
+      float gn(vec3 p){ vec3 i=floor(p), f=fract(p); vec3 u=f*f*f*(f*(f*6.0-15.0)+10.0);
+        return mix(mix(mix(dot(g3(i),f),dot(g3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),mix(dot(g3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(g3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),
+                   mix(mix(dot(g3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(g3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),mix(dot(g3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(g3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z); }
+      float fbm(vec3 p, float oct){ float fp=max(length(fwidth(p)),1e-5); float a=1.0,f=1.0,s=0.0,n=0.0;
+        for(int k=0;k<9;k++){ if(float(k)>=oct+1.0) break; float w=clamp((1.0/f)/(2.0*fp)-1.0,0.0,1.0); s+=a*w*gn(p*f); n+=a; a*=0.5; f*=2.0; }
+        return clamp(0.5+0.7*s/n,0.0,1.0); }
+    ` + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float facT = fbm(vPosObj * ${T.escala.toFixed(4)}, ${T.detalle.toFixed(1)});
+        diffuseColor.rgb = mix(cTerr0, cTerr1, facT);
+        float gr = vnF(vPosW * 9.0); diffuseColor.rgb *= 1.0 + uReal * 0.18 * (smoothstep(0.72, 0.9, gr) - smoothstep(0.1, 0.25, gr) * 0.6);
+        float hT = ${T.relieve_fuerza.toFixed(3)} * fbm(vPosObj * ${T.relieve_escala.toFixed(3)}, 10.0) + uReal * 0.02 * gr;`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        normal = perturbarNormal(-vViewPosition, normal, vec2(dFdx(hT), dFdy(hT)), faceDirection);
+        // el terreno es un campo de alturas: las pendientes de la malla (facetas largas con normales invertidas o de espaldas al sol) se
+        // iluminaban casi negras («rayas oscuras»); se acerca la normal de iluminación a la vertical (70 %) para que se vean como suelo.
+        normal = normalize(mix(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz), 0.7));`);
+  };
+  m.customProgramCacheKey = () => 'hito-terreno2';
+  return m;
+}
+const suelo = new THREE.Mesh(new THREE.PlaneGeometry(VIDEO.suelo_lado, VIDEO.suelo_lado), materialTerreno());
+suelo.rotation.x = -Math.PI / 2; suelo.position.y = VIDEO.suelo_y; suelo.receiveShadow = true; scene.add(suelo);
+
+// =====================================================================================================
+// 5) MATERIALES DEL MODELO: un registro por grupo de color, editable, guardable en JSON
+// =====================================================================================================
+const MATS = {};                      // id -> {id, base:{...video}, acabado, color, metal, rug, alfa, textura, polvo, visible, mallas:[], material}
+function crearEntrada(id) {
+  const v = VIDEO.materiales[id] || {color: '808080', metal: 0.2, rugosidad: 0.5, alfa: 1};
+  const base = {acabado: v.acabado || acabadoInicial(id, v.alfa), color: '#' + v.color, metal: v.metal, rug: v.rugosidad, alfa: v.alfa,
+                cc: v.cc || 0, a: v.a || 1, disciplina: v.disciplina || '', textura: 1, polvo: 1, visible: true};
+  return Object.assign({id, base, mallas: [], tris: 0}, structuredClone(base));
+}
+function construirMaterial(ent) {
+  if (ent.acabado === 'terreno') return materialTerreno();
+  if (ent.acabado === 'v4') return materialV4(ent, null);
+  const A = ACABADOS[ent.acabado];
+  const p = {color: new THREE.Color(ent.color), metalness: ent.metal, roughness: ent.rug, side: THREE.DoubleSide,
+             transparent: ent.alfa < 1, opacity: ent.alfa, depthWrite: ent.alfa >= 1, envMapIntensity: 1};
+  const m = A.barniz > 0 ? new THREE.MeshPhysicalMaterial(Object.assign(p, {clearcoat: A.barniz, clearcoatRoughness: 0.32})) : new THREE.MeshStandardMaterial(p);
+  parchearAcabado(m, ent);
+  return m;
+}
+function aplicarMaterial(ent, reconstruir = true) {
+  if (reconstruir || !ent.material) {
+    if (ent.material) ent.material.dispose();
+    ent.material = construirMaterial(ent);
+  } else {
+    const m = ent.material; m.color.set(ent.color); if (ent.acabado === 'v4' && ent.a) m.color.multiplyScalar(ent.a); m.metalness = ent.metal; m.roughness = ent.rug;
+    const tr = ent.alfa < 1; if (tr !== m.transparent) { m.transparent = tr; m.depthWrite = !tr; m.needsUpdate = true; }
+    m.opacity = ent.alfa;
+    if (m.userData.u) { m.userData.u.uTex.value = ent.textura; m.userData.u.uPolvo.value = ent.polvo * ACABADOS[ent.acabado].polvo; }
+  }
+  for (const o of ent.mallas) {
+    o.material = ent.material; o.visible = ent.visible;
+    const tr = ent.alfa < 1;
+    o.castShadow = ent.acabado !== 'terreno' && !tr && !o.userData.sinSombra; o.receiveShadow = true; o.renderOrder = tr ? 2 : 0;
+  }
+  renderer.shadowMap.needsUpdate = true; marcar();
+}
+const estadoMateriales = () => Object.values(MATS).map(e => ({id: e.id, acabado: e.acabado, color: e.color, metal: e.metal, rugosidad: e.rug, alfa: e.alfa, textura: e.textura, polvo: e.polvo, visible: e.visible}));
+function cargarEstadoMateriales(lista, avisar) {
+  let n = 0;
+  for (const s of lista || []) {
+    const e = MATS[s.id]; if (!e) continue;
+    if (s.acabado in ACABADOS) e.acabado = s.acabado;
+    if (typeof s.color === 'string') e.color = s.color;
+    for (const [k, c] of [['metal', 'metal'], ['rugosidad', 'rug'], ['alfa', 'alfa'], ['textura', 'textura'], ['polvo', 'polvo']]) if (typeof s[k] === 'number') e[c] = s[k];
+    if (typeof s.visible === 'boolean') e.visible = s.visible;
+    aplicarMaterial(e); n++;
+  }
+  pintarListaMat(); if (avisar) aviso(`Materiales cargados: ${n} grupo(s)`);
+}
+
+// =====================================================================================================
+// 6) POSPROCESO Y CALIDAD (AO completa con imagen quieta; medido en Intel Iris Xe)
+// =====================================================================================================
+const CALIDADES = {alta: {px: 1.0, ao: 'siempre', msaa: 4, sombra: 4096}, media: {px: 1.0, ao: 'quieto', msaa: 4, sombra: 4096}, baja: {px: 0.75, ao: 'quieto', msaa: 0, sombra: 2048}};
+let modoCal = (Q.get('calidad') || 'auto').toLowerCase(); if (!(modoCal in CALIDADES) && modoCal !== 'auto') modoCal = 'auto';
+let cal = modoCal === 'auto' ? 'alta' : modoCal;
+let composer, gtao, aoActiva = true;
+function crearComposer(ancho, alto, pr) {
+  const C = CALIDADES[cal];
+  const w = ancho || innerWidth, h = alto || innerHeight;
+  renderer.setPixelRatio(pr ?? Math.min(devicePixelRatio, 1.5) * C.px);
+  const p = renderer.getPixelRatio();
+  if (sol.shadow.mapSize.x !== C.sombra) { sol.shadow.mapSize.set(C.sombra, C.sombra); if (sol.shadow.map) { sol.shadow.map.dispose(); sol.shadow.map = null; } renderer.shadowMap.needsUpdate = true; }
+  const rt = new THREE.WebGLRenderTarget(w * p, h * p, {type: THREE.HalfFloatType, samples: C.msaa});
+  if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); }
+  if (gtao) gtao.dispose();
+  composer = new EffectComposer(renderer, rt);
+  composer.setPixelRatio(p);
+  composer.addPass(new RenderPass(scene, cam));
+  gtao = new GTAOPass(scene, cam, w * p, h * p);
+  gtao.output = GTAOPass.OUTPUT.Default; gtao.blendIntensity = 0.9;
+  gtao.updateGtaoMaterial({radius: 1.6, distanceExponent: 2.0, thickness: 0.6, scale: 1.0, samples: 16, distanceFallOff: 1.0, screenSpaceRadius: false});
+  gtao.updatePdMaterial({lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 8, rings: 3, samples: 16});
+  composer.addPass(gtao); composer.addPass(new OutputPass());
+  composer.setSize(w, h);
+  $('selCal').value = modoCal;
+  marcar();
+}
+function ajustar() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h); cam.aspect = w / h; cam.fov = fovVertical(cam.aspect); cam.updateProjectionMatrix();
+  if (composer) composer.setSize(w, h); marcar();
+}
+let ultimoMov = 0, estaticoListo = false;
+function marcar() { ultimoMov = performance.now(); estaticoListo = false; }
+controls.addEventListener('change', marcar);
+addEventListener('resize', () => { if (!grabando) ajustar(); });
+function aplicarTono() { renderer.toneMapping = TONOS[luz.tono].map; renderer.toneMappingExposure = luz.expo; UCIELO.value = luz.tono === 'aces' ? 0.55 : 1.0; $('expo').value = luz.expo; $('expoO').textContent = luz.expo.toFixed(2); marcar(); }
+aplicarTono(); ajustar(); crearComposer(); aplicarSol();
+
+// =====================================================================================================
+// 7) RECORRIDOS: base (optimizado 25 s, original del video), propios (editor) y cargados (JSON)
+// =====================================================================================================
+class Recorrido {
+  constructor(o) {
+    this.id = o.id; this.nombre = o.nombre; this.fps = o.fps || 30; this.verificacion = o.verificacion || null; this.origen = o.origen || '';
+    if (o.claves && o.claves.length >= 2) {
+      this.claves = o.claves.map(k => ({t: +k.t, cam: k.cam.slice(), obj: k.obj.slice()})).sort((a, b) => a.t - b.t);
+      this.dur = this.claves[this.claves.length - 1].t - this.claves[0].t;
+    } else {
+      this.tray = o.trayectoria_three || o.tray; this.dur = (this.tray.length - 1) / this.fps;
+    }
+  }
+  muestrear(t, P, O) {
+    t = THREE.MathUtils.clamp(t, 0, this.dur);
+    if (this.tray) {
+      const f = t * this.fps, i = Math.min(Math.floor(f), this.tray.length - 2), s = f - i, a = this.tray[i], b = this.tray[i + 1];
+      P.set(a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s);
+      O.set(a[3] + (b[3] - a[3]) * s, a[4] + (b[4] - a[4]) * s, a[5] + (b[5] - a[5]) * s); return;
+    }
+    const K = this.claves, t0 = K[0].t + t; let i = 0; while (i < K.length - 2 && t0 > K[i + 1].t) i++;
+    const herm = (campo, out) => {                       // Catmull-Rom con tangentes según el tiempo de cada punto
+      const k0 = K[Math.max(i - 1, 0)], k1 = K[i], k2 = K[i + 1], k3 = K[Math.min(i + 2, K.length - 1)];
+      const dt = Math.max(k2.t - k1.t, 1e-6), s = THREE.MathUtils.clamp((t0 - k1.t) / dt, 0, 1), s2 = s * s, s3 = s2 * s;
+      for (let c = 0; c < 3; c++) {
+        const m1 = (k2[campo][c] - k0[campo][c]) / Math.max(k2.t - k0.t, 1e-6) * dt, m2 = (k3[campo][c] - k1[campo][c]) / Math.max(k3.t - k1.t, 1e-6) * dt;
+        out.setComponent(c, (2 * s3 - 3 * s2 + 1) * k1[campo][c] + (s3 - 2 * s2 + s) * m1 + (-2 * s3 + 3 * s2) * k2[campo][c] + (s3 - s2) * m2);
+      }
+    };
+    herm('cam', P); herm('obj', O);
+  }
+  aJSON() {
+    const n = Math.round(this.dur * 30) + 1, P = new THREE.Vector3(), O = new THREE.Vector3(), tray = [];
+    for (let i = 0; i < n; i++) { this.muestrear(i / 30, P, O); tray.push([P.x, P.y, P.z, O.x, O.y, O.z].map(v => +v.toFixed(3))); }
+    return {formato: 'recorrido-hito-v1', nombre: this.nombre, fps: 30, duracion_s: +this.dur.toFixed(3),
+            ejes: 'Three.js (Y arriba), metros; mismo origen que convertidos_blender/area1313_web.glb', modelo: 'Área 1313',
+            generado: new Date().toISOString(), verificacion: this.verificacion, claves: this.claves || undefined, trayectoria_three: tray};
+  }
+}
+const RECS = [];
+for (const r of RECORRIDOS_BASE) RECS.push(new Recorrido(r));
+for (const r of leerLS('a1313_recorridos_propios') || []) { try { RECS.push(new Recorrido(r)); } catch (e) {} }
+let rec = RECS.find(r => r.id === Q.get('recorrido')) || RECS[0];
+function pintarSelectorRec() {
+  $('selRec').innerHTML = RECS.map(r => `<option value="${r.id}">${r.nombre} · ${r.dur.toFixed(1)} s</option>`).join('');
+  $('selRec').value = rec.id;
+}
+function infoRec() {
+  const v = rec.verificacion;
+  const hm = v ? Math.min(v.holgura_min_m, v.holgura_min_tramos_m ?? 99) : 0, ho = v ? (v.holgura_objetivo_m || 3) : 3;
+  $('infoRec').innerHTML = v ? `Holgura mínima con los elementos: <b class="${hm >= ho - 0.05 ? 'ok' : 'mal'}">${hm.toFixed(2)} m</b> <small>(${v.verificado_en || 'verificado en el PC, celdas de 0,75 m'})</small>` +
+    (v.largo_m ? ` · largo ${v.largo_m} m · vel. máx. ${v.velocidad_max_m_s} m/s` : '') : (rec.claves ? `${rec.claves.length} puntos` : '');
+}
+function persistirPropios() { guardarLS('a1313_recorridos_propios', RECS.filter(r => !RECORRIDOS_BASE.some(b => b.id === r.id)).map(r => r.aJSON())); }
+function activarRec(r, reproducir) {
+  if (!BANDA.opCubUsuario) {                          // opacidad de las capotas según el recorrido (salvo que el usuario la haya fijado)
+    const op = r.id === 'correas' ? 0.1 : 1;
+    if (op !== BANDA.opCub) { BANDA.opCub = op; $('opCub').value = op; $('opCubO').textContent = Math.round(100 * op) + ' %'; aplicarCubiertas(); }
+  }
+  rec = r; t = 0; dir = 1; $('tl').max = $('sl').max = rec.dur; pintarSelectorRec(); infoRec(); alternarLibre(false); aplicar(0);
+  dibujarRuta(); play = !!reproducir; marcar();
+}
+
+// ---- Editor de recorridos
+let claves = leerLS('a1313_editor_claves') || [];
+function pintarClaves() {
+  $('listaClaves').innerHTML = claves.length ? claves.map((k, i) => `<div class="clave"><b>${i + 1}</b>
+    <input type="number" step="0.5" min="0" value="${k.t}" data-i="${i}" aria-label="segundo del punto ${i + 1}">
+    <span class="nota">(${k.cam.map(v => v.toFixed(0)).join(', ')})</span>
+    <button class="btn" data-ir="${i}" title="Ir a este punto">👁</button><button class="btn" data-del="${i}" title="Quitar">✕</button></div>`).join('')
+    : '<div class="nota">Sin puntos todavía.</div>';
+  guardarLS('a1313_editor_claves', claves);
+}
+$('listaClaves').addEventListener('change', e => { const i = e.target.dataset.i; if (i !== undefined) { claves[i].t = Math.max(0, +e.target.value); claves.sort((a, b) => a.t - b.t); pintarClaves(); } });
+$('listaClaves').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.del !== undefined) { claves.splice(+b.dataset.del, 1); pintarClaves(); }
+  if (b.dataset.ir !== undefined) { const k = claves[+b.dataset.ir]; alternarLibre(true); cam.position.fromArray(k.cam); controls.target.fromArray(k.obj); controls.update(); marcar(); }
+});
+function agregarClave() {
+  const objetivo = libre ? controls.target : O;
+  const t0 = claves.length ? claves[claves.length - 1].t + 3 : 0;
+  claves.push({t: t0, cam: cam.position.toArray().map(v => +v.toFixed(3)), obj: objetivo.toArray().map(v => +v.toFixed(3))});
+  pintarClaves(); aviso(`Punto ${claves.length} agregado en ${t0} s`);
+}
+function recorridoEditor() {
+  if (claves.length < 2) { aviso('Agregue al menos 2 puntos'); return null; }
+  const nombre = $('nomRec').value.trim() || 'Mi recorrido';
+  const id = 'propio-' + nombreArchivo(nombre).toLowerCase();
+  const r = new Recorrido({id, nombre, claves});
+  const i = RECS.findIndex(x => x.id === id); if (i >= 0) RECS[i] = r; else RECS.push(r);
+  persistirPropios(); return r;
+}
+
+// ---- Interferencias: campo de distancias de la planta (precalculado en el PC, celdas de 1,5 m)
+let CD = null;
+async function cargarDistancias() {
+  if (CD) return CD;
+  const meta = RECORRIDOS_BASE.find(r => r.distancias)?.distancias;
+  if (!meta) throw new Error('El visor no trae el campo de distancias');
+  const r = await fetch(CONFIG.DISTANCIAS); if (!r.ok) throw new Error('No se encontró ' + CONFIG.DISTANCIAS);
+  // tolerancia de la medición: celdas de 1,5 m; con valor mínimo por bloque se subestima hasta ~1 m, con promedio ~0,4 m
+  CD = {d: new Uint8Array(await r.arrayBuffer()), o: meta.origen, c: meta.celda_m, n: meta.dims, tol: meta.agregado === 'media' ? 0.4 : 0.9};
+  return CD;
+}
+function holguraEn(p) {                             // p en ejes Three -> Blender; interpolación trilineal entre centros de celda
+  const n = CD.n, c = CD.c;
+  const fx = (p.x - CD.o[0]) / c - 0.5, fy = (-p.z - CD.o[1]) / c - 0.5, fz = (p.y - CD.o[2]) / c - 0.5;
+  const i = Math.floor(fx), j = Math.floor(fy), k = Math.floor(fz);
+  if (i < 0 || j < 0 || k < 0 || i >= n[0] - 1 || j >= n[1] - 1 || k >= n[2] - 1) return 25.5;
+  const u = fx - i, v = fy - j, w = fz - k, d = CD.d, at = (a, b, e) => d[(a * n[1] + b) * n[2] + e] / 10;
+  const x00 = at(i, j, k) * (1 - u) + at(i + 1, j, k) * u, x10 = at(i, j + 1, k) * (1 - u) + at(i + 1, j + 1, k) * u;
+  const x01 = at(i, j, k + 1) * (1 - u) + at(i + 1, j, k + 1) * u, x11 = at(i, j + 1, k + 1) * (1 - u) + at(i + 1, j + 1, k + 1) * u;
+  return (x00 * (1 - v) + x10 * v) * (1 - w) + (x01 * (1 - v) + x11 * v) * w;
+}
+function verificarRec(r, holg) {                    // 120 muestras por segundo (cubre los tramos entre cuadros)
+  const P = new THREE.Vector3(), O = new THREE.Vector3(), n = Math.max(2, Math.round(r.dur * 120));
+  let min = 99, tmin = 0; const malos = [];
+  for (let i = 0; i <= n; i++) {
+    const tt = r.dur * i / n; r.muestrear(tt, P, O); const h = holguraEn(P);
+    if (h < min) { min = h; tmin = tt; }
+    if (h < holg - CD.tol) malos.push(tt);
+  }
+  const tramos = []; for (const x of malos) { const u = tramos[tramos.length - 1]; if (u && x - u[1] <= 0.1) u[1] = x; else tramos.push([x, x]); }
+  return {min, tmin, tramos};
+}
+function corregirRec(r, holg) {                      // empuja la cámara hacia el espacio libre y suaviza; el objetivo no cambia
+  const n = Math.round(r.dur * 30) + 1, P = [], O = [], a = new THREE.Vector3(), b = new THREE.Vector3();
+  for (let i = 0; i < n; i++) { r.muestrear(i / 30, a, b); P.push(a.clone()); O.push(b.clone()); }
+  const g = new THREE.Vector3(), e = CD.c;
+  for (let it = 0; it < 400; it++) {
+    for (let i = 0; i < n; i++) {
+      const h = holguraEn(P[i]); if (h >= holg) continue;
+      g.set(holguraEn(a.copy(P[i]).setX(P[i].x + e)) - holguraEn(b.copy(P[i]).setX(P[i].x - e)),
+            holguraEn(a.copy(P[i]).setY(P[i].y + e)) - holguraEn(b.copy(P[i]).setY(P[i].y - e)),
+            holguraEn(a.copy(P[i]).setZ(P[i].z + e)) - holguraEn(b.copy(P[i]).setZ(P[i].z - e)));
+      if (g.lengthSq() < 1e-8) g.set(0, 1, 0);
+      P[i].addScaledVector(g.normalize(), Math.min(holg - h, 1.0) * 0.6);
+    }
+    for (let i = 1; i < n - 1; i++) { a.copy(P[i - 1]).add(P[i + 1]).multiplyScalar(0.25).addScaledVector(P[i], 0.5); if (holguraEn(a) >= Math.min(holg, holguraEn(P[i]))) P[i].copy(a); }
+  }
+  return new Recorrido({id: r.id + '-corregido', nombre: r.nombre + ' (corregido)', fps: 30,
+    trayectoria_three: P.map((p, i) => [p.x, p.y, p.z, O[i].x, O[i].y, O[i].z].map(v => +v.toFixed(3)))});
+}
+
+// ---- Trayectoria visible
+let ruta = null;
+function dibujarRuta() {
+  if (ruta) { scene.remove(ruta); ruta.geometry.dispose(); ruta = null; }
+  if (!$('chkRuta').checked) { marcar(); return; }
+  const P = new THREE.Vector3(), O = new THREE.Vector3(), pts = [];
+  for (let i = 0; i <= Math.round(rec.dur * 10); i++) { rec.muestrear(i / 10, P, O); pts.push(P.clone()); }
+  ruta = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color: 0x22d3ee, fog: false, depthTest: false, transparent: true}));
+  ruta.renderOrder = 10; scene.add(ruta); marcar();
+}
+
+// =====================================================================================================
+// 8) VIDEO MP4 (WebCodecs + mp4-muxer): cuadro a cuadro a 30 fps exactos, con AO, título y pie opcionales
+// =====================================================================================================
+let grabando = false, cancelarVid = false;
+function dibujarTitulo(ctx, W, H) {
+  const k = H / 1080, pad = 40 * k;
+  let g = ctx.createLinearGradient(0, 0, 0, 150 * k); g.addColorStop(0, 'rgba(11,18,32,.95)'); g.addColorStop(.6, 'rgba(11,18,32,.78)'); g.addColorStop(1, 'rgba(11,18,32,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 150 * k);
+  ctx.fillStyle = '#22d3ee'; ctx.fillRect(pad, 20 * k, W - 2 * pad, 3 * k);
+  ctx.fillStyle = '#e2e8f0'; ctx.font = `700 ${40 * k}px Segoe UI, Arial`; ctx.textBaseline = 'middle'; ctx.fillText('ÁREA 1313 · MOLINOS – RECORRIDO VIRTUAL', pad, 58 * k);
+  ctx.font = `800 ${24 * k}px Segoe UI, Arial`; const tw = ctx.measureText('FLUOR | SALFA').width;
+  ctx.fillStyle = '#fff'; ctx.fillRect(W - pad - tw - 40 * k, 38 * k, tw + 40 * k, 42 * k);
+  ctx.fillStyle = '#0b1d3a'; ctx.fillText('FLUOR | SALFA', W - pad - tw - 20 * k, 59 * k);
+  ctx.fillStyle = '#cbd5e1'; ctx.font = `${20 * k}px Segoe UI, Arial`; ctx.fillText('Nueva Centinela · Animación 3D de planta', pad, 100 * k);
+  ctx.fillStyle = 'rgba(11,18,32,.8)'; ctx.fillRect(0, H - 52 * k, W, 44 * k);
+  ctx.fillStyle = '#cbd5e1'; ctx.font = `${19 * k}px Segoe UI, Arial`; ctx.textAlign = 'center'; ctx.fillText($('credito').textContent, W / 2, H - 30 * k); ctx.textAlign = 'left';
+  g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#22d3ee'); g.addColorStop(1, '#ec4899'); ctx.fillStyle = g; ctx.fillRect(0, H - 8 * k, W, 8 * k);
+}
+async function grabarVideo() {
+  if (grabando) return;
+  if (!('VideoEncoder' in window)) { aviso('Este navegador no permite generar MP4 (use Chrome o Edge actualizados)', 6000); return; }
+  const [W, H] = $('selRes').value.split('x').map(Number), FPS = 30, N = Math.round(rec.dur * FPS) + 1;
+  let codec = null, cfg = null;
+  for (const c of ['avc1.640033', 'avc1.4d0033', 'avc1.42e033', 'vp09.00.40.08']) {
+    const p = {codec: c, width: W, height: H, bitrate: Math.round(W * H * FPS * 0.16), framerate: FPS};
+    try { if ((await VideoEncoder.isConfigSupported(p)).supported) { codec = c; cfg = p; break; } } catch (e) {}
+  }
+  if (!codec) { aviso('El codificador de video no admite esta resolución; pruebe 1920 × 1080 o 1280 × 720', 6000); return; }
+  const {Muxer, ArrayBufferTarget} = await import(CONFIG.MP4);
+  const muxer = new Muxer({target: new ArrayBufferTarget(), video: {codec: codec.startsWith('avc') ? 'avc' : 'vp9', width: W, height: H, frameRate: FPS}, fastStart: 'in-memory'});
+  let errorEnc = null;
+  const enc = new VideoEncoder({output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: e => errorEnc = e});
+  enc.configure(cfg);
+  grabando = true; cancelarVid = false; const estabaPlay = play; play = false; alternarLibre(false);
+  $('grabando').style.display = 'flex';
+  const calPrev = cal; cal = 'alta';
+  renderer.setSize(W, H, false); cam.aspect = W / H; cam.fov = fovVertical(cam.aspect); cam.updateProjectionMatrix();
+  crearComposer(W, H, 1); gtao.enabled = true;
+  const lienzo = new OffscreenCanvas(W, H), ctx = lienzo.getContext('2d');
+  const t0 = performance.now();
+  try {
+    for (let i = 0; i < N && !cancelarVid && !errorEnc; i++) {
+      aplicar(i / FPS); composer.render(1 / FPS);
+      ctx.drawImage(renderer.domElement, 0, 0, W, H);
+      if ($('chkTitVid').checked) dibujarTitulo(ctx, W, H);
+      const vf = new VideoFrame(lienzo, {timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS)});
+      enc.encode(vf, {keyFrame: i % 60 === 0}); vf.close();
+      while (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 5));
+      if (i % 3 === 0) {
+        const pct = (i + 1) / N, s = (performance.now() - t0) / 1000;
+        $('progVid').style.width = (100 * pct).toFixed(1) + '%';
+        $('txtVid').textContent = `Cuadro ${i + 1} de ${N} · ${W}×${H} · ${codec.startsWith('avc') ? 'H.264' : 'VP9'} · faltan ~${Math.max(0, s / pct - s).toFixed(0)} s`;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    await enc.flush();
+    if (errorEnc) throw errorEnc;
+    if (!cancelarVid) {
+      muxer.finalize();
+      descargar(`Area_1313_${nombreArchivo(rec.nombre)}_${W}x${H}.mp4`, new Blob([muxer.target.buffer], {type: 'video/mp4'}));
+      aviso(`Video listo: ${(muxer.target.buffer.byteLength / 1e6).toFixed(1)} MB`, 5000);
+    } else aviso('Generación de video cancelada');
+  } catch (e) { console.error(e); aviso('No se pudo generar el video: ' + (e.message || e), 7000); }
+  finally {
+    try { enc.close(); } catch (e) {}
+    grabando = false; cal = calPrev; $('grabando').style.display = 'none';
+    renderer.setSize(innerWidth, innerHeight); crearComposer(); ajustar(); aplicar(t); play = estabaPlay;
+  }
+}
+
+// =====================================================================================================
+// 8b) EQUIPOS ANIMADOS DEL ÁREA 1313 — mismas particiones, materiales y pistas que el visor v4.1 (animaciones.json,
+//     animación «ciclo-completo», 60 s, se repite): molinos ML-1401/1402 (gira solo el tambor, con franjas guía),
+//     pórtico CN-1406 (traslación sobre rieles, carro y 2 ganchos con cable estirable) y pescantes CN-1404/1405 (giro de
+//     pluma + gancho). Geometría: unir_capas_1313.py -> area1313_web_equipos.bin (coordenadas del visor v4, Y arriba).
+//     El grupo «marco» lleva el v4 a los ejes del modelo: giro de 180° en Y + traslación (TX, TZ, -TY).
+//     Las piezas móviles no proyectan sombra (el mapa de sombras es estático, como la grúa del Hito).
+// =====================================================================================================
+const EQUIPOS = __EQUIPOS__;
+const GRUA = {activa: Q.get('grua') !== '0', partes: {}, listo: null, marco: null};
+const DEG = Math.PI / 180;
+
+// ---- Aspecto del visor v4 (materialIndustrial + parchearMaterial de index_v4.html): PBR por disciplina/color, barniz,
+//      variación de superficie y vetas de intemperie en coordenadas de objeto; franjas guía en el tambor de los molinos.
+const UMARCA = {value: 1};
+const GLSL_V4 = `
+float h31(vec3 p){ p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+float vruido(vec3 p){
+  vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  float a = mix(mix(h31(i), h31(i + vec3(1.,0.,0.)), f.x), mix(h31(i + vec3(0.,1.,0.)), h31(i + vec3(1.,1.,0.)), f.x), f.y);
+  float b = mix(mix(h31(i + vec3(0.,0.,1.)), h31(i + vec3(1.,0.,1.)), f.x), mix(h31(i + vec3(0.,1.,1.)), h31(i + vec3(1.,1.,1.)), f.x), f.y);
+  return mix(a, b, f.z);
+}`;
+function parchearV4(mat, piv, terreno) {
+  const marca = !!piv;
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uReal = UG.real;
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPosO;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPosO = position;');
+    let decl = '#include <common>\nvarying vec3 vPosO;\nuniform float uReal;\n' + GLSL_V4 + '\n';
+    if (marca) { sh.uniforms.uMarca = UMARCA; sh.uniforms.uPiv = {value: piv.clone()}; decl += 'uniform float uMarca;\nuniform vec3 uPiv;\n'; }
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', decl)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float nzA = vruido(vPosO * 1.7) * 0.65 + vruido(vPosO * 9.0) * 0.35;
+        float vet = vruido(vec3(vPosO.x * 2.2, vPosO.y * 0.22, vPosO.z * 2.2));
+        diffuseColor.rgb *= 1.0 - uReal * (0.20 * (nzA - 0.5) + 0.16 * smoothstep(0.55, 0.95, vet));
+        ${marca ? `float angG = atan(vPosO.z - uPiv.z, vPosO.y - uPiv.y);
+        float franja = smoothstep(0.1, 0.35, cos(angG * 4.0));
+        diffuseColor.rgb *= 1.0 - uMarca * 0.50 * franja;` : ''}`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + uReal * (nzA - 0.5) * 0.30 + uReal * 0.10 * smoothstep(0.55, 0.95, vet), 0.04, 1.0);`)
+      // terreno (campo de alturas de Navisworks con facetas de normales dispares): normal de iluminación 70 % hacia la vertical,
+      // igual que el terreno del visor del Hito (si no, las facetas se ven como franjas claras y oscuras)
+      .replace('#include <normal_fragment_maps>', terreno ? `#include <normal_fragment_maps>
+        normal = normalize(mix(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz), 0.7));` : '#include <normal_fragment_maps>');
+  };
+  mat.customProgramCacheKey = () => 'v4real' + (marca ? 'M' : '') + (terreno ? 'T' : '');
+}
+function materialV4(ent, piv) {
+  const color = new THREE.Color(ent.color), hsl = {}; color.getHSL(hsl);
+  const gris = hsl.s < 0.2;
+  if (ent.a && ent.a !== 1) color.multiplyScalar(ent.a);
+  const envBase = gris ? 1.0 : (ent.metal > 0.3 ? 0.9 : 0.45);
+  const base = {color, metalness: ent.metal, roughness: ent.rug, envMapIntensity: envBase * luz.reflejos, side: THREE.DoubleSide,
+                transparent: ent.alfa < 1, opacity: ent.alfa, depthWrite: ent.alfa >= 1};
+  const m = ent.cc ? new THREE.MeshPhysicalMaterial(Object.assign(base, {clearcoat: ent.cc, clearcoatRoughness: 0.35})) : new THREE.MeshStandardMaterial(base);
+  m.userData.envBase = envBase;
+  parchearV4(m, piv, ent.id === 'MAT_C6B88D');
+  return m;
+}
+
+// ---- Suelo extenso: mismo material que el terreno de Navisworks, justo bajo su punto más bajo
+function ajustarSuelo(raiz) {
+  const e = MATS['MAT_C6B88D']; if (!e || !e.mallas.length) return;
+  const b = new THREE.Box3(); for (const m of e.mallas) b.expandByObject(m);
+  suelo.position.y = b.min.y - 0.15; suelo.updateMatrixWorld();
+  // el terreno no proyecta sombra (como en el Hito): sus huecos de malla dejaban ver la sombra sobre el suelo extenso
+  for (const m of e.mallas) m.userData.sinSombra = true;
+  suelo.userData.sinSombra = true; if (!e.mallas.includes(suelo)) e.mallas.push(suelo);
+  aplicarMaterial(e, false); suelo.material = e.material;
+}
+
+// ---- Montaje de las partes (montarPartes del v4): nodo en su pivote; mallas desplazadas −pivote. Parte «estirable»
+//      (gancho + cable): el nodo es solo un impulsor; su Δy se aplica a los vértices (rígido bajo y1, anclado sobre y2).
+async function prepararGrua() {
+  if (!EQUIPOS) return;
+  let buf;
+  try { const r = await fetch(CONFIG.EQUIPOS_BIN); if (!r.ok) throw new Error('HTTP ' + r.status); buf = await r.arrayBuffer(); }
+  catch (e) { console.warn('Equipos animados no disponibles:', e); aviso('No se encontró ' + CONFIG.EQUIPOS_BIN); return; }
+  const marco = new THREE.Group(); marco.name = 'equipos_v4';
+  marco.rotation.y = Math.PI; marco.position.set(EQUIPOS.TX, EQUIPOS.TZ, -EQUIPOS.TY);
+  const P = GRUA.partes, tocadas = new Set();
+  for (const p of EQUIPOS.partes) P[p.id] = Object.assign({}, p, {nodo: new THREE.Group(), mal: []});
+  for (const p of Object.values(P)) p.piv = new THREE.Vector3(...(p.pivote || (p.padre && P[p.padre].pivote) || [0, 0, 0]));
+  for (const p of Object.values(P)) {
+    const pa = p.padre ? P[p.padre] : null, cont = pa ? pa.nodo : marco, off = pa ? pa.piv : new THREE.Vector3();
+    p.nodo.name = 'parte_' + p.id; p.nodo.position.copy(p.piv).sub(off); p.rest = p.nodo.position.clone(); cont.add(p.nodo);
+    for (const s of p.mallas) {
+      const pos = new Float32Array(buf, s.pos, s.vert * 3), nor = new Int8Array(buf, s.nor, s.vert * 3);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(p.estirable ? pos.slice() : pos, 3));
+      g.setAttribute('normal', new THREE.BufferAttribute(nor, 3, true));
+      g.computeBoundingSphere();
+      const id = `V4_${s.disciplina}_${s.color.toString(16).toUpperCase().padStart(6, '0')}`;
+      const ent = MATS[id] || (MATS[id] = crearEntrada(id));
+      const m = new THREE.Mesh(g); m.name = 'equipo_' + p.id; m.userData.sinSombra = true; m.receiveShadow = true;
+      if (/_giro$/.test(p.id)) { m.userData.entMarca = ent; m.material = materialV4(ent, p.piv); }   // franjas guía: material propio
+      else { ent.mallas.push(m); tocadas.add(ent); }
+      ent.tris += s.vert / 3; nTri += s.vert / 3;
+      if (p.estirable) { m.position.copy(off).negate(); cont.add(m); m.userData.pos0 = pos.slice(); m.frustumCulled = false; }
+      else { m.position.copy(p.piv).negate(); p.nodo.add(m); }
+      p.mal.push(m);
+    }
+  }
+  scene.add(marco); GRUA.marco = marco;
+  for (const e of tocadas) aplicarMaterial(e, !e.material);
+  for (const e of tocadas) for (const m of e.mallas) if (m.userData.sinSombra) m.castShadow = false;
+  pintarListaMat();
+  animarGrua(t);
+  console.log('Equipos animados:', Object.values(P).map(p => `${p.id} ${p.tri}`).join(', '));
+}
+
+// ---- Pistas (crearPistas/muestrear del v4): «suave» = smoothstep por tramo; «lineal»; «escalon». Δ sobre el reposo.
+function evPista(k, tt) {
+  const ks = k.claves, n = ks.length;
+  if (tt <= ks[0][0]) return ks[0][1];
+  if (tt >= ks[n - 1][0]) return ks[n - 1][1];
+  let i = 0; while (i < n - 2 && tt > ks[i + 1][0]) i++;
+  const [t0, a] = ks[i], [t1, b] = ks[i + 1];
+  let u = t1 > t0 ? (tt - t0) / (t1 - t0) : 1;
+  if (k.modo === 'suave') u = u * u * (3 - 2 * u); else if (k.modo === 'escalon') u = 0;
+  return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
+}
+function estirar(p, dy) {
+  const e = p.estirable; if (p.ultimo !== undefined && Math.abs(dy - p.ultimo) < 1e-5) return;
+  p.ultimo = dy; const den = Math.max(1e-6, e.y2 - e.y1);
+  for (const m of p.mal) {
+    const a = m.geometry.attributes.position, q = a.array, q0 = m.userData.pos0;
+    for (let i = 1; i < q.length; i += 3) { const y = q0[i]; q[i] = y + dy * (y <= e.y1 ? 1 : (y >= e.y2 ? 0 : (e.y2 - y) / den)); }
+    a.needsUpdate = true; m.geometry.computeBoundingSphere();
+  }
+}
+function animarGrua(tt) {
+  if (!GRUA.marco) return;
+  const D = EQUIPOS.duracion, tc = GRUA.activa ? ((tt % D) + D) % D : 0;
+  for (const [id, pk] of Object.entries(EQUIPOS.pistas)) {
+    const p = GRUA.partes[id]; if (!p) continue;
+    if (pk.posicion) {
+      const d = evPista(pk.posicion, tc);
+      p.nodo.position.set(p.rest.x + d[0], p.rest.y + d[1], p.rest.z + d[2]);
+      if (p.estirable) estirar(p, d[1]);
+    }
+    if (pk.rotacion) { const d = evPista(pk.rotacion, tc); p.nodo.rotation.set(d[0] * DEG, d[1] * DEG, d[2] * DEG, 'XYZ'); }
+  }
+}
+
+// =====================================================================================================
+// 8c) CORREAS TRANSPORTADORAS EN FUNCIONAMIENTO (1241-CV-1305/1306/1307 y 1241-CV-1309/1310/1311)
+//     extraer_correas_hito.py midió en el modelo la línea central de cada banda (cinta de carga y de retorno: losas de 4 cm y
+//     1,22–1,52 m de ancho dentro de UNION_MAT_008000) y el sentido de marcha (TAG y piezas del FBX). Aquí:
+//       · se retiran los triángulos originales de la banda (la malla decimada perdió su cara superior en varios tramos) y se
+//         reconstruye la superficie sobre esa misma línea central y ancho, con un material cuya textura avanza a la velocidad de la
+//         banda: goma con empalmes cada 6 m y, sobre la cinta de carga, el mineral;
+//       · se separan las CAPOTAS (arco + faldones) para verlas translúcidas: en la planta real tapan la cinta de carga.
+//     No se agrega ningún equipo: solo la superficie de las bandas que ya están en el modelo.
+// =====================================================================================================
+const CORREAS = __CORREAS__;
+const BANDA = {
+  activa: Q.get('correas') !== '0', vel: Q.has('velcorrea') ? +Q.get('velcorrea') : 3.0,   // m/s: valor de referencia (el modelo no trae la velocidad de diseño)
+  carga: Q.get('carga') !== '0', opCub: Q.has('cubiertas') ? +Q.get('cubiertas') : 0.1, opCubUsuario: Q.has('cubiertas'),   // capotas: 10 % en el recorrido de las correas, 100 % en los demás
+  u: {uDesp: {value: 0}, uCarga: {value: 1}}, malla: null, cub: null, tLibre: 0, info: null
+};
+function tramosCorreas() {                             // segmentos de cada tramo (ejes Blender) con su marco local
+  const out = [];
+  for (const cv of (CORREAS && CORREAS.correas) || []) for (const tr of cv.tramos) {
+    const p = tr.puntos, segs = []; let acc = 0;
+    for (let i = 0; i < p.length - 1; i++) {
+      const a = p[i], b = p[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+      const T = [(b[0] - a[0]) / L, (b[1] - a[1]) / L, (b[2] - a[2]) / L];
+      let lx = -T[1], ly = T[0]; const ln = Math.hypot(lx, ly); lx /= ln; ly /= ln;          // lateral horizontal = Z × T
+      segs.push({a, T, l: [lx, ly], N: [-T[2] * ly, T[2] * lx, T[0] * ly - T[1] * lx], L, s0: acc}); acc += L;   // N = T × lateral
+    }
+    const mn = [0, 1, 2].map(k => Math.min(...p.map(q => q[k])) - 2.2), mx = [0, 1, 2].map(k => Math.max(...p.map(q => q[k])) + 2.2);
+    out.push({tag: cv.tag, tipo: tr.tipo, w: tr.ancho_m / 2, segs, largo: acc, mn, mx, n: 0, nc: 0});
+  }
+  return out;
+}
+const LOC = {s: 0, l: 0, h: 0, d: 0};
+function localBanda(x, y, z, tr) {                     // proyección de un punto (Blender) sobre la línea central del tramo
+  let best = 1e9;
+  for (const g of tr.segs) {
+    const rx = x - g.a[0], ry = y - g.a[1], rz = z - g.a[2], u = rx * g.T[0] + ry * g.T[1] + rz * g.T[2];
+    if (u < -0.05 || u > g.L + 0.05) continue;
+    const l = rx * g.l[0] + ry * g.l[1], h = rx * g.N[0] + ry * g.N[1] + rz * g.N[2], d = Math.hypot(l, h);
+    if (d < best) { best = d; LOC.s = g.s0 + u; LOC.l = l; LOC.h = h; }
+  }
+  LOC.d = best; return best < 1e8;
+}
+function materialBanda() {
+  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: 0.85, metalness: 0, side: THREE.DoubleSide});
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, BANDA.u);
+    sh.vertexShader = 'attribute vec3 aBanda;\nvarying vec3 vBanda;\nvarying vec3 vPosW;\n' + sh.vertexShader.replace('#include <worldpos_vertex>',
+      '#include <worldpos_vertex>\n vBanda = aBanda; vPosW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform float uDesp, uCarga;\nvarying vec3 vBanda;\n' + GLSL_COMUN + '\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      float sB = vBanda.x - uDesp, lB = vBanda.y;          // sB: metros a lo largo de la banda (desplazados por el avance), lB: -1..1 de borde a borde
+      vec3 col = vec3(0.034, 0.034, 0.037) * (0.85 + 0.3 * vnF(vec3(sB * 3.0, lB * 2.0, 0.0)));   // goma
+      col = mix(col, vec3(0.15), 0.8 * pulso(sB / 6.0, 0.035));                                    // empalmes / marcas transversales cada 6 m
+      col = mix(col, vec3(0.085), smoothstep(0.90, 0.98, abs(lB)));                                  // bordes gastados
+      if (vBanda.z > 0.5 && uCarga > 0.5) {                // cinta de carga: mineral en el centro, con borde irregular
+        float anchoM = 0.64 + 0.10 * (vnF(vec3(sB * 0.35, 0.0, 3.1)) - 0.5) + 0.05 * (vnF(vec3(sB * 2.1, 0.0, 7.7)) - 0.5);
+        float m = 1.0 - smoothstep(anchoM - 0.06, anchoM + 0.02, abs(lB));
+        float g0 = vnF(vec3(sB * 0.9, lB * 0.8, 2.2)), g1 = vnF(vec3(sB * 4.0, lB * 3.0, 1.3)), g2 = vnF(vec3(sB * 14.0, lB * 9.0, 5.1));
+        vec3 mineral = mix(vec3(0.24, 0.21, 0.18), vec3(0.56, 0.49, 0.41), clamp(0.45 * g0 + 0.35 * g1 + 0.2 * g2, 0.0, 1.0));   // manchas de colpas y finos
+        mineral *= 0.70 + 0.55 * smoothstep(0.50, 0.80, g1) - 0.25 * smoothstep(0.55, 0.85, vnF(vec3(sB * 2.2, lB * 1.7, 8.4)));   // relieve de la carga (luces y sombras)
+        col = mix(col, mineral, m);
+      }
+      diffuseColor.rgb = col;`);
+  };
+  m.customProgramCacheKey = () => 'hito-banda';
+  return m;
+}
+function prepararCorreas(raiz) {
+  const TR = tramosCorreas(); if (!TR.length) return;
+  let o = null; raiz.traverse(m => { if (m.isMesh && /MAT_008000/.test(m.material.name || '') && (!o || m.geometry.index.count > o.geometry.index.count)) o = m; });
+  if (!o) { console.warn('Correas: no se encontró la malla UNION_MAT_008000'); return; }
+  const t0 = performance.now();
+  const pos = o.geometry.attributes.position, nrm = o.geometry.attributes.normal, idx = o.geometry.index.array, n = idx.length / 3, e = o.matrixWorld.elements;
+  const B = new Float32Array(pos.count * 3);                                 // vértices en ejes Blender (x, -z, y)
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    B[3 * i] = e[0] * x + e[4] * y + e[8] * z + e[12]; B[3 * i + 2] = e[1] * x + e[5] * y + e[9] * z + e[13]; B[3 * i + 1] = -(e[2] * x + e[6] * y + e[10] * z + e[14]);
+  }
+  const gmn = [0, 1, 2].map(k => Math.min(...TR.map(r => r.mn[k]))), gmx = [0, 1, 2].map(k => Math.max(...TR.map(r => r.mx[k])));
+  const banda = [], cubierta = [], quedan = [], S = new Float32Array(21), Hs = [0, 0, 0];
+  const muestras = (q0, q1, q2) => {                                         // 3 vértices + 3 puntos medios + centroide
+    for (let k = 0; k < 3; k++) {
+      const a = B[3 * q0 + k], b = B[3 * q1 + k], c = B[3 * q2 + k];
+      S[k] = a; S[3 + k] = b; S[6 + k] = c; S[9 + k] = (a + b) / 2; S[12 + k] = (b + c) / 2; S[15 + k] = (c + a) / 2; S[18 + k] = (a + b + c) / 3;
+    }
+  };
+  for (let i = 0; i < n; i++) {
+    const q0 = idx[3 * i], q1 = idx[3 * i + 1], q2 = idx[3 * i + 2];
+    const cx = (B[3 * q0] + B[3 * q1] + B[3 * q2]) / 3, cy = (B[3 * q0 + 1] + B[3 * q1 + 1] + B[3 * q2 + 1]) / 3, cz = (B[3 * q0 + 2] + B[3 * q1 + 2] + B[3 * q2 + 2]) / 3;
+    if (cx < gmn[0] || cx > gmx[0] || cy < gmn[1] || cy > gmx[1] || cz < gmn[2] || cz > gmx[2]) { quedan.push(i); continue; }
+    let hecho = false; muestras(q0, q1, q2);
+    const lado = Math.max(Math.hypot(S[3] - S[0], S[4] - S[1], S[5] - S[2]), Math.hypot(S[6] - S[3], S[7] - S[4], S[8] - S[5]), Math.hypot(S[0] - S[6], S[1] - S[7], S[2] - S[8]));
+    for (const tr of TR) {                                                   // 1) banda: triángulo largo (> 2,5 m) con los 7 puntos sobre la losa de la banda
+      if (lado < 2.5) break;
+      if (cx < tr.mn[0] || cx > tr.mx[0] || cy < tr.mn[1] || cy > tr.mx[1] || cz < tr.mn[2] || cz > tr.mx[2]) continue;
+      if (!localBanda(cx, cy, cz, tr) || Math.abs(LOC.h) > 0.07 || Math.abs(LOC.l) > tr.w + 0.04) continue;
+      let ok = true;
+      for (let k = 0; k < 7 && ok; k++) ok = localBanda(S[3 * k], S[3 * k + 1], S[3 * k + 2], tr) && Math.abs(LOC.h) <= 0.07 && Math.abs(LOC.l) <= tr.w + 0.04;
+      if (ok) { banda.push(i, TR.indexOf(tr)); tr.n++; hecho = true; break; }
+    }
+    if (!hecho) for (const tr of TR) {                                       // 2) cubierta: arco sobre la cinta de carga (radio ≈ semiancho … +0,95 m)
+      if (tr.tipo !== 'carga' || cx < tr.mn[0] || cx > tr.mx[0] || cy < tr.mn[1] || cy > tr.mx[1] || cz < tr.mn[2] || cz > tr.mx[2]) continue;
+      if (!localBanda(cx, cy, cz, tr) || LOC.d > tr.w + 1.2) continue;
+      let ok = true;
+      for (let k = 0; k < 7 && ok; k++) {
+        ok = localBanda(S[3 * k], S[3 * k + 1], S[3 * k + 2], tr);
+        const r = Math.hypot(LOC.l, Math.max(LOC.h, 0));
+        ok = ok && r > tr.w - 0.2 && r < tr.w + 0.95 && LOC.h > -0.1 && Math.abs(LOC.l) < tr.w + 0.95; if (k < 3) Hs[k] = LOC.h;
+      }
+      if (ok && Math.max(...Hs) - Math.min(...Hs) > 0.02) { cubierta.push(i); tr.nc++; hecho = true; break; }
+      // faldón lateral de la capota: plancha casi vertical a ambos lados de la banda, desde ~0,45 m bajo la banda hasta el arco
+      let okF = true, lat = 0;
+      for (let k = 0; k < 7 && okF; k++) { okF = localBanda(S[3 * k], S[3 * k + 1], S[3 * k + 2], tr) && Math.abs(LOC.l) > tr.w + 0.05 && Math.abs(LOC.l) < tr.w + 0.35 && LOC.h > -0.45 && LOC.h < 0.35; lat += LOC.l; }
+      if (okF) {
+        const ux = S[3] - S[0], uy = S[4] - S[1], uz = S[5] - S[2], vx = S[6] - S[0], vy = S[7] - S[1], vz = S[8] - S[2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, nn = Math.hypot(nx, ny, nz) || 1, g = tr.segs[0];
+        if (Math.abs(nx * g.l[0] + ny * g.l[1]) / nn > 0.8) { cubierta.push(i); tr.nc++; hecho = true; break; }
+      }
+    }
+    if (!hecho) quedan.push(i);
+  }
+  // malla de bandas: la malla decimada conserva los bordes de cada banda pero perdió su cara superior en varios tramos (se ve el
+  // larguero de abajo). Se reconstruye la superficie de la banda sobre su línea central medida (mismas estaciones y mismo ancho que
+  // en el modelo, +5 mm sobre la cara superior) y los triángulos originales de la banda se retiran. Atributo aBanda = (s en el
+  // sentido de marcha, lateral -1..1, 1 = cinta de carga). Ejes Three = (x, z, -y) de Blender.
+  const PB = [], NB = [], AB = [];
+  for (const tr of TR) {
+    let prevN = null;
+    for (const g of tr.segs) {
+      const nPas = Math.max(1, Math.ceil(g.L / 2.0));
+      for (let k = 0; k < nPas; k++) {
+        const u0 = g.L * k / nPas, u1 = g.L * (k + 1) / nPas, q = [];
+        for (const u of [u0, u1]) for (const lt of [-1, 1]) {
+          const x = g.a[0] + g.T[0] * u + g.l[0] * lt * tr.w + g.N[0] * 0.005, y = g.a[1] + g.T[1] * u + g.l[1] * lt * tr.w + g.N[1] * 0.005, z = g.a[2] + g.T[2] * u + g.N[2] * 0.005;
+          q.push([x, z, -y, g.s0 + u, lt]);
+        }
+        for (const [i0, i1, i2] of [[0, 1, 3], [0, 3, 2]]) for (const j of [i0, i1, i2]) {
+          PB.push(q[j][0], q[j][1], q[j][2]); NB.push(g.N[0], g.N[2], -g.N[1]); AB.push(q[j][3], q[j][4], tr.tipo === 'carga' ? 1 : 0);
+        }
+      }
+    }
+  }
+  const gB = new THREE.BufferGeometry();
+  gB.setAttribute('position', new THREE.Float32BufferAttribute(PB, 3)); gB.setAttribute('normal', new THREE.Float32BufferAttribute(NB, 3)); gB.setAttribute('aBanda', new THREE.Float32BufferAttribute(AB, 3));
+  gB.computeBoundingSphere();
+  const mB = new THREE.Mesh(gB, materialBanda()); mB.name = 'correas_bandas';
+  mB.matrixAutoUpdate = false; mB.frustumCulled = false; mB.receiveShadow = true; mB.castShadow = false;
+  scene.add(mB); BANDA.malla = mB; const nb = banda.length / 2;
+  // malla de cubiertas: comparte los vértices de la malla original; material translúcido al terminar de crear los materiales
+  const ic = new Uint32Array(3 * cubierta.length); cubierta.forEach((t_, k) => { ic[3 * k] = idx[3 * t_]; ic[3 * k + 1] = idx[3 * t_ + 1]; ic[3 * k + 2] = idx[3 * t_ + 2]; });
+  const gC = new THREE.BufferGeometry(); gC.setAttribute('position', pos); if (nrm) gC.setAttribute('normal', nrm); gC.setIndex(new THREE.BufferAttribute(ic, 1)); gC.computeBoundingSphere();
+  const mC = new THREE.Mesh(gC, o.material); mC.name = 'correas_cubiertas'; mC.matrixAutoUpdate = false; mC.matrix.copy(o.matrix); mC.frustumCulled = false;
+  o.parent.add(mC); BANDA.cub = mC;
+  const ir = new Uint32Array(3 * quedan.length); quedan.forEach((t_, k) => { ir[3 * k] = idx[3 * t_]; ir[3 * k + 1] = idx[3 * t_ + 1]; ir[3 * k + 2] = idx[3 * t_ + 2]; });
+  o.geometry.setIndex(new THREE.BufferAttribute(ir, 1));
+  const porTag = {}; for (const tr of TR) { const r = porTag[tr.tag] || (porTag[tr.tag] = {carga: 0, retorno: 0, largo: 0, cub: 0}); r[tr.tipo] += tr.n; r.cub += tr.nc; if (tr.tipo === 'carga') r.largo = tr.largo; }
+  BANDA.info = {bandas: nb, cubiertas: cubierta.length, porTag, ms: Math.round(performance.now() - t0), superficie: PB.length / 9};
+  console.log(`Correas: ${nb} triángulos de banda retirados (superficie reconstruida: ${PB.length / 9} triángulos) y ${cubierta.length} de cubiertas separados de MAT_008000 en ${BANDA.info.ms} ms`, JSON.stringify(porTag));
+}
+function aplicarCubiertas() {                          // material de las cubiertas = el del grupo 008000 con la opacidad elegida
+  const c = BANDA.cub, e = MATS['MAT_008000']; if (!c || !e) return;
+  const a = Math.max(0, Math.min(1, BANDA.opCub));
+  if (c.material && c.material !== e.material) c.material.dispose();
+  c.material = construirMaterial(Object.assign({}, e, {alfa: a < 1 ? a : 1}));
+  if (a < 1) {                                          // translúcida: sin reflejo de vidrio (si no, el brillo especular tapa la banda)
+    const m = c.material; m.side = THREE.FrontSide; m.envMapIntensity = 0.15;   // FrontSide: la capota viene modelada con caras dobles (con DoubleSide se acumulan 4 capas) m.roughness = Math.max(m.roughness, 0.7); m.metalness = Math.min(m.metalness, 0.1);
+    if (m.isMeshPhysicalMaterial) m.clearcoat = 0;
+  }
+  c.visible = e.visible && a > 0.01; c.castShadow = false; c.receiveShadow = true; c.renderOrder = a < 1 ? 2 : 0;
+  renderer.shadowMap.needsUpdate = true; marcar();
+}
+function animarCorreas(tt) {
+  BANDA.u.uDesp.value = BANDA.activa ? BANDA.vel * (tt + BANDA.tLibre) : 0;
+  BANDA.u.uCarga.value = BANDA.carga ? 1 : 0;
+}
+
+// Terreno aplanado en las zonas con mallas discontinuas (taludes/solapas de la malla de Navisworks): los vértices del terreno que caen
+// dentro de los polígonos (planta, ejes Blender) se llevan al nivel de plataforma PLANO.z. Afecta a la malla del terreno y al relleno.
+// Toda la planta al este del domo (x > -70) queda como suelo plano: los vértices del terreno se llevan bajo el suelo extenso (z −42,2) y el
+// suelo extenso sube a PLANO.suelo (−41,6, nivel de las plataformas, que son 29.000 m² a −42,5…−40,5). Se conserva el montículo del domo.
+const PLANO = {suelo: null, polis: []};   // Área 1313: terreno tal como viene de Navisworks (sin aplanar)
+const enPoli = (x, y, p) => { let d = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) if (((p[i][1] > y) !== (p[j][1] > y)) && (x < (p[j][0] - p[i][0]) * (y - p[i][1]) / (p[j][1] - p[i][1]) + p[i][0])) d = !d; return d; };
+// peso de aplanado (0 = terreno original, 1 = plano): dentro del polígono crece suavemente con la distancia al borde (rampa de PLANO.rampa m)
+PLANO.rampa = 14;
+const dSeg = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy); };
+function pesoPlano(x, y) {                       // devuelve {w, z}: peso de aplanado y nivel al que se aplana
+  if (Q.get('plano') === '0') return null; let r = null;
+  for (const q of PLANO.polis) {
+    const p = q.p; if (!enPoli(x, y, p)) continue; let d = 1e9;
+    for (let i = 0, j = p.length - 1; i < p.length; j = i++) d = Math.min(d, dSeg(x, y, p[i], p[j]));
+    const u = Math.min(1, d / PLANO.rampa), w = u * u * (3 - 2 * u); if (!r || w > r.w) r = {w, z: q.z};
+  }
+  return r;
+}
+function aplanarTerreno(raiz) {
+  const v = new THREE.Vector3(); let n = 0;
+  if (PLANO.suelo !== null && Q.get('plano') !== '0') { suelo.position.y = PLANO.suelo; suelo.updateMatrixWorld(); }
+  raiz.traverse(o => {
+    if (!o.isMesh || !/MAT_C6B88D/.test(o.material.name || '')) return;
+    const pos = o.geometry.attributes.position, nor = o.geometry.attributes.normal, mw = o.matrixWorld, inv = mw.clone().invert();
+    const up = new THREE.Vector3(0, 1, 0).transformDirection(inv);
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mw);
+      const r = pesoPlano(v.x, -v.z); if (!r || r.w <= 0) continue;
+      v.y = v.y * (1 - r.w) + r.z * r.w; v.applyMatrix4(inv); pos.setXYZ(i, v.x, v.y, v.z); if (nor) nor.setXYZ(i, up.x, up.y, up.z); n++;
+    }
+    pos.needsUpdate = true; if (nor) nor.needsUpdate = true; o.geometry.computeBoundingSphere();
+  });
+  console.log(`Terreno: ${n} vértices aplanados`);
+}
+
+// Relleno del terreno: la malla del terreno (Navisworks) trae los taludes triangulados en «pajarita» (triángulos que se tocan en un
+// punto y dejan huecos). rellenar_terreno.py calcula triángulos nuevos con los MISMOS vértices del terreno que cierran esos huecos;
+// aquí se agregan como una pieza más del terreno (mismo material). Si el archivo no existe, el visor funciona igual.
+async function cargarRelleno() {
+  if (!CONFIG.RELLENO) return;
+  try {
+    const r = await fetch(CONFIG.RELLENO); if (!r.ok) return;
+    const d = await r.json(), e = MATS['MAT_C6B88D']; if (!e) return;
+    for (let i = 0; i < d.pos.length; i += 3) { const r = pesoPlano(d.pos[i], -d.pos[i + 2]); if (r && r.w > 0) { d.pos[i + 1] = d.pos[i + 1] * (1 - r.w) + r.z * r.w; d.nrm[i] = 0; d.nrm[i + 1] = 1; d.nrm[i + 2] = 0; } }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(d.pos), 3)); g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(d.nrm), 3));
+    g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, e.material); m.name = 'terreno_relleno'; m.matrixAutoUpdate = false; m.updateMatrix(); m.frustumCulled = false;
+    scene.add(m); e.mallas.push(m); e.tris += d.tri; nTri += d.tri; aplicarMaterial(e, false);
+    console.log(`Terreno: ${d.tri} triángulos de relleno agregados`);
+  } catch (err) { console.warn('Relleno del terreno no disponible:', err); }
+}
+
+// =====================================================================================================
+// 9) CARGA DEL MODELO
+// =====================================================================================================
+const draco = new DRACOLoader().setDecoderPath(CONFIG.DRACO); draco.setDecoderConfig({type: 'wasm'}); draco.setWorkerLimit(4);
+const loader = new GLTFLoader().setDRACOLoader(draco);
+// Limpieza SIN pérdida visual: quita los triángulos de área nula (|n|² < 1e-12 ⇒ < 0,5 mm²), que no se ven y solo cuestan fluidez.
+let nDegenerados = 0;
+function limpiarDegenerados(g) {
+  const ix = g.index, pos = g.attributes.position; if (!ix || pos.isInterleavedBufferAttribute) return 0;
+  const I = ix.array, P = pos.array, n = I.length / 3, O = new I.constructor(I.length); let k = 0;
+  for (let i = 0; i < n; i++) {
+    const a = I[3*i] * 3, b = I[3*i+1] * 3, c = I[3*i+2] * 3;
+    const ux = P[b] - P[a], uy = P[b+1] - P[a+1], uz = P[b+2] - P[a+2], wx = P[c] - P[a], wy = P[c+1] - P[a+1], wz = P[c+2] - P[a+2];
+    const cx = uy*wz - uz*wy, cy = uz*wx - ux*wz, cz = ux*wy - uy*wx;
+    if (cx*cx + cy*cy + cz*cz < 1e-12) continue;
+    O[k++] = I[3*i]; O[k++] = I[3*i+1]; O[k++] = I[3*i+2];
+  }
+  if (k === I.length) return 0;
+  g.setIndex(new THREE.BufferAttribute(O.slice(0, k), 1)); return (I.length - k) / 3;
+}// ---- Recorte por zonas (SIN pérdida visual): las mallas grandes se parten en bloques espaciales de ~CELDA m que comparten los mismos
+//      vértices; la GPU descarta los bloques fuera de cámara (frustum culling) en vez de procesar los 23 M de triángulos siempre.
+//      No se tocan: terreno, mallas translúcidas (el orden de mezcla), piezas animadas ni mallas pequeñas.
+function trocearMallas(raiz) {
+  const CELDA_M = +(Q.get('celda') || 40), MIN_TRI = 60000; let antes = 0, despues = 0;
+  for (const e of Object.values(MATS)) {
+    if (e.id.includes('C6B88D') || e.alfa < 1) continue;
+    const nuevas = [];
+    for (const o of e.mallas) {
+      const g = o.geometry;
+      if (!o.parent || !o.isMesh || !g.index || o.material.transparent || g.index.count / 3 < MIN_TRI) { nuevas.push(o); continue; }
+      const I = g.index.array, P = g.attributes.position.array, n = I.length / 3; g.computeBoundingBox(); const par = o.parent, escala = Math.max(1e-6, new THREE.Vector3().setFromMatrixScale(o.matrixWorld).x), CELDA = CELDA_M / escala; const B = g.boundingBox;
+      const nx = Math.ceil((B.max.x - B.min.x) / CELDA) + 1, ny = Math.ceil((B.max.y - B.min.y) / CELDA) + 1, nz = Math.ceil((B.max.z - B.min.z) / CELDA) + 1;
+      const mapa = new Map(), cid = new Int32Array(n), cuenta = [];
+      for (let i = 0; i < n; i++) {
+        const a = I[3*i] * 3, b = I[3*i+1] * 3, c = I[3*i+2] * 3;
+        const cx = (P[a] + P[b] + P[c]) / 3, cy = (P[a+1] + P[b+1] + P[c+1]) / 3, cz = (P[a+2] + P[b+2] + P[c+2]) / 3;
+        const k = (Math.floor((cx - B.min.x) / CELDA) * ny + Math.floor((cy - B.min.y) / CELDA)) * nz + Math.floor((cz - B.min.z) / CELDA);
+        let j = mapa.get(k); if (j === undefined) { j = cuenta.length; mapa.set(k, j); cuenta.push(0); }
+        cid[i] = j; cuenta[j]++;
+      }
+      const ini = new Int32Array(cuenta.length + 1); for (let j = 0; j < cuenta.length; j++) ini[j+1] = ini[j] + cuenta[j];
+      const O = new I.constructor(I.length), cur = ini.slice(0, cuenta.length);
+      for (let i = 0; i < n; i++) { const d = 3 * cur[cid[i]]++; O[d] = I[3*i]; O[d+1] = I[3*i+1]; O[d+2] = I[3*i+2]; }
+      for (let j = 0; j < cuenta.length; j++) {
+        const gi = new THREE.BufferGeometry(); for (const nombre in g.attributes) gi.setAttribute(nombre, g.attributes[nombre]);
+        gi.setIndex(new THREE.BufferAttribute(O.subarray(3 * ini[j], 3 * ini[j+1]), 1));
+        const bb = new THREE.Box3(); const tv = new THREE.Vector3();
+        for (let q = 3 * ini[j]; q < 3 * ini[j+1]; q++) bb.expandByPoint(tv.set(P[O[q]*3], P[O[q]*3+1], P[O[q]*3+2]));
+        gi.boundingBox = bb; gi.boundingSphere = bb.getBoundingSphere(new THREE.Sphere());
+        const m = new THREE.Mesh(gi, o.material); m.name = o.name + '#' + j; m.userData = Object.assign({}, o.userData);
+        m.matrixAutoUpdate = false; m.matrix.copy(o.matrix); m.matrixWorld.copy(o.matrixWorld); m.matrixWorldNeedsUpdate = true;
+        m.castShadow = o.castShadow; m.receiveShadow = o.receiveShadow; m.renderOrder = o.renderOrder; m.visible = o.visible;
+        par.add(m); nuevas.push(m);
+      }
+      par.remove(o); antes++; despues += cuenta.length;
+    }
+    e.mallas = nuevas;
+  }
+  raiz.updateMatrixWorld(true); renderer.shadowMap.needsUpdate = true;
+  console.log(`recorte por zonas: ${antes} mallas -> ${despues} bloques (celda ${CELDA_M} m)`);
+}let nTri = 0;
+loader.load(CONFIG.MODELO, gltf => {
+  $('etapa').textContent = 'Preparando materiales, texturas y sombras…';
+  gltf.scene.traverse(o => {
+    if (!o.isMesh) return;
+    const id = (o.material.name || '').replace(/\.\d+$/, '');
+    const e = MATS[id] || (MATS[id] = crearEntrada(id));
+    if (Q.get('limpiar') !== '0' && !id.includes('C6B88D')) nDegenerados += limpiarDegenerados(o.geometry);
+    const tri = (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+    e.mallas.push(o); e.tris += tri; nTri += tri;
+    o.matrixAutoUpdate = false; o.updateMatrix();
+  });
+  console.log('triángulos de área nula quitados:', nDegenerados);
+  aplanarTerreno(gltf.scene);
+  GRUA.listo = prepararGrua(gltf.scene);
+  prepararCorreas(gltf.scene);
+  cargarEstadoMateriales(leerLS('a1313_materiales'), false);
+  for (const e of Object.values(MATS)) aplicarMaterial(e);
+  aplicarCubiertas(); pintarInfoCorreas();
+  scene.add(gltf.scene); scene.updateMatrixWorld(true);
+  cajaPlanta.setFromObject(gltf.scene); ajustarSuelo(gltf.scene); aplicarSol();
+  pintarListaMat();
+  $('prog').style.width = '100%';
+  setTimeout(() => { $('carga').style.opacity = 0; setTimeout(() => $('carga').remove(), 700); }, 150);
+  activarRec(rec, Q.get('auto') !== '0');
+  Promise.all([cargarRelleno(), GRUA.listo]).finally(() => { if (Q.get('zonas') !== '0') trocearMallas(gltf.scene); medirInicio = performance.now(); window.__listo = true; });
+}, ev => {
+  if (ev.total) { const p = ev.loaded / ev.total; $('prog').style.width = (90 * p).toFixed(0) + '%';
+    $('etapa').textContent = p < 1 ? `Descargando geometría… ${(ev.loaded / 1e6).toFixed(1)} / ${(ev.total / 1e6).toFixed(1)} MB` : 'Descomprimiendo geometría (Draco)…'; }
+}, err => {
+  $('msg').innerHTML = 'No se pudo cargar <b>' + CONFIG.MODELO + '</b>.<br>Genere el modelo con <b>herramientas/unir_capas_1313.py</b> y abra el visor con <b>INICIAR_VISOR_1313.bat</b> (servidor local + internet para Three.js).';
+  console.error(err);
+});
+
+// Elementos sueltos eliminados (se cargan solo si se piden)
+let grpSueltos = null;
+async function mostrarSueltos(v) {
+  if (v && !grpSueltos) {
+    aviso('Cargando elementos sueltos…');
+    try {
+      const g = await loader.loadAsync(CONFIG.SUELTOS_GLB); grpSueltos = g.scene;
+      const rojo = new THREE.MeshStandardMaterial({color: 0xff2020, emissive: 0x550000, roughness: 0.5, side: THREE.DoubleSide});
+      grpSueltos.traverse(o => { if (o.isMesh) { o.material = rojo; o.castShadow = false; } });
+      scene.add(grpSueltos);
+    } catch (e) { aviso('No se encontró ' + CONFIG.SUELTOS_GLB); $('chkSueltos').checked = false; return; }
+  }
+  if (grpSueltos) grpSueltos.visible = v; marcar();
+}
+
+// =====================================================================================================
+// 10) REPRODUCCIÓN
+// =====================================================================================================
+let t = 0, play = false, libre = false, dir = 1, vel = 1;
+const P = new THREE.Vector3(), O = new THREE.Vector3();
+function aplicar(tt) {
+  rec.muestrear(tt, P, O); cam.position.copy(P); cam.up.set(0, 1, 0); cam.lookAt(O); animarGrua(tt); animarCorreas(tt);
+  const txt = tt.toFixed(1) + ' / ' + rec.dur.toFixed(1) + ' s';
+  $('sl').value = $('tl').value = tt; $('tt').textContent = $('tiempoTxt').textContent = txt;
+  $('barraRec').style.width = (100 * tt / rec.dur).toFixed(2) + '%';
+  marcar();
+}
+let medirInicio = 0, nCuadros = 0, acum = 0, ultimoInfo = 0, vC = 0, vT = 0;
+function controlCalidad(dt) {
+  nCuadros++; acum += dt; const ahora = performance.now();
+  if (ahora - ultimoInfo > 500) { $('hud').textContent = `${(nCuadros / acum).toFixed(0)} FPS · ${(nTri / 1e6).toFixed(2)} M tri · ${cal}`; nCuadros = 0; acum = 0; ultimoInfo = ahora; }
+  if (modoCal !== 'auto' || !medirInicio || ahora - medirInicio < 1000) return;
+  vC++; vT += dt;
+  if (vT >= 2) { const fps = vC / vT, orden = ['alta', 'media', 'baja'];
+    if (fps < 17 && cal !== 'baja') { cal = orden[orden.indexOf(cal) + 1]; crearComposer(); medirInicio = ahora; aviso('Calidad ajustada a «' + cal + '» para mantener la fluidez'); }
+    vC = 0; vT = 0; }
+}
+const reloj = new THREE.Clock();
+function cuadro() {
+  if (grabando) return;
+  const dt = Math.min(reloj.getDelta(), 0.1);
+  if (libre) { controls.update(); if (BANDA.activa && BANDA.malla) { BANDA.tLibre += dt; animarCorreas(t); marcar(); } }
+  else if (play) {
+    t += dt * vel * dir;
+    const modo = $('selBucle').value;
+    if (t >= rec.dur) { if (modo === 'bucle') t = 0; else if (modo === 'vaiven') { t = rec.dur; dir = -1; } else { t = rec.dur; play = false; } }
+    if (t <= 0 && dir < 0) { t = 0; dir = 1; }
+    aplicar(t);
+  }
+  const txt = play ? '⏸ Pausar' : '▶ Iniciar'; if ($('bPlay').textContent !== txt) { $('bPlay').textContent = txt; $('bPlay2').textContent = play ? '⏸' : '▶'; }
+  const quieto = !play && performance.now() - ultimoMov > 250;
+  if (quieto && estaticoListo && !PRUEBA) return;
+  gtao.enabled = aoActiva && (CALIDADES[cal].ao === 'siempre' || quieto || PRUEBA);
+  composer.render(dt);
+  if (quieto) estaticoListo = true;
+  if (window.__listo && play) controlCalidad(dt);
+}
+if (!PRUEBA) renderer.setAnimationLoop(cuadro);
+
+// =====================================================================================================
+// 11) INTERFAZ
+// =====================================================================================================
+function alternarLibre(forzar) {
+  libre = forzar ?? !libre; $('bLib').classList.toggle('on', libre);
+  if (libre) { play = false; controls.target.copy(O); controls.enabled = true; controls.update(); }
+  else { controls.enabled = false; BANDA.tLibre = 0; aplicar(t); }
+  marcar();
+}
+const playPausa = () => { if (libre) alternarLibre(false); if (t >= rec.dur && dir > 0) t = 0; play = !play; marcar(); };
+$('bPlay').onclick = $('bPlay2').onclick = playPausa;
+$('bRst').onclick = () => { t = 0; dir = 1; play = true; alternarLibre(false); };
+$('bLib').onclick = () => alternarLibre();
+for (const id of ['sl', 'tl']) $(id).oninput = e => { t = +e.target.value; play = false; alternarLibre(false); };
+$('vel').oninput = e => { vel = +e.target.value; $('velO').textContent = vel.toFixed(2).replace(/0$/, '') + '×'; };
+$('selRec').onchange = e => activarRec(RECS.find(r => r.id === e.target.value), true);
+$('chkRuta').onchange = dibujarRuta;
+$('bPlegar').onclick = () => $('panel').classList.add('plegado');
+$('lengueta').onclick = () => $('panel').classList.remove('plegado');
+const verTit = v => { for (const id of ['cab', 'pie']) $(id).style.opacity = v ? 1 : 0; $('bTit').classList.toggle('on', v); };
+let tit = Q.get('titulo') !== '0'; verTit(tit); $('bTit').onclick = () => { tit = !tit; verTit(tit); };
+if (Q.get('limpio') === '1') document.body.classList.add('limpio');
+if (Q.get('panel') === '0') $('panel').classList.add('plegado');
+// editor
+$('bAddClave').onclick = agregarClave;
+$('bVerRec').onclick = () => { const r = recorridoEditor(); if (r) activarRec(r, true); };
+$('bLimpiar').onclick = () => { claves = []; pintarClaves(); };
+$('holg').oninput = e => $('holgO').textContent = (+e.target.value).toFixed(1) + ' m';
+$('bVerificar').onclick = async () => {
+  try { await cargarDistancias(); } catch (e) { $('resVerif').innerHTML = `<span class="mal">${e.message}</span>`; return; }
+  const h = +$('holg').value, v = verificarRec(rec, h);
+  if (!(rec.verificacion && rec.verificacion.holgura_min_tramos_m !== undefined))         // los recorridos base conservan la verificación fina del PC
+    rec.verificacion = Object.assign({}, rec.verificacion || {}, {holgura_min_m: +v.min.toFixed(2), holgura_objetivo_m: h, verificado_en: 'visor (celdas de 1,5 m)'});
+  const est = `holgura mínima estimada ${v.min.toFixed(2)} m (± ${CD.tol} m, en ${v.tmin.toFixed(1)} s)`;
+  $('resVerif').innerHTML = v.tramos.length
+    ? `<span class="mal">«${rec.nombre}»: ${est}. Interferencia (bajo ${h} m) en: ${v.tramos.map(([a, b]) => Math.abs(a - b) < 0.05 ? a.toFixed(1) + ' s' : a.toFixed(1) + '–' + b.toFixed(1) + ' s').join(', ')}.</span>`
+    : `<span class="ok">«${rec.nombre}»: sin interferencias; ${est}.</span>`;
+  infoRec();
+};
+$('bCorregir').onclick = async () => {
+  try { await cargarDistancias(); } catch (e) { $('resVerif').innerHTML = `<span class="mal">${e.message}</span>`; return; }
+  const h = +$('holg').value, r = corregirRec(rec, h), v = verificarRec(r, h);
+  r.verificacion = {holgura_min_m: +v.min.toFixed(2), holgura_objetivo_m: h, verificado_en: `visor (celdas de 1,5 m, ± ${CD.tol} m)`};
+  const i = RECS.findIndex(x => x.id === r.id); if (i >= 0) RECS[i] = r; else RECS.push(r);
+  persistirPropios(); activarRec(r, true);
+  $('resVerif').innerHTML = v.tramos.length
+    ? `<span class="aviso">Corregido en parte: aún hay tramos bajo ${h} m (${v.tramos.map(([a, b]) => a.toFixed(1) + '–' + b.toFixed(1) + ' s').join(', ')}). Agregue puntos que rodeen esos elementos.</span>`
+    : `<span class="ok">Recorrido corregido: holgura mínima estimada ${v.min.toFixed(2)} m (± ${CD.tol} m). Quedó como «${r.nombre}».</span>`;
+};
+$('bDescJSON').onclick = () => descargar(`recorrido_${nombreArchivo(rec.nombre)}.json`, JSON.stringify(rec.aJSON(), null, 1));
+$('bCargJSON').onclick = () => $('fileRec').click();
+$('fileRec').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = '';
+  try {
+    const j = JSON.parse(await f.text());
+    if (!(j.claves?.length >= 2) && !(j.trayectoria_three?.length >= 2)) throw new Error('el archivo no tiene «claves» ni «trayectoria_three»');
+    const r = new Recorrido(Object.assign({}, j, {id: 'cargado-' + nombreArchivo(j.nombre || f.name).toLowerCase(), nombre: j.nombre || f.name}));
+    const i = RECS.findIndex(x => x.id === r.id); if (i >= 0) RECS[i] = r; else RECS.push(r);
+    if (j.claves) { claves = r.claves.map(k => ({t: k.t, cam: k.cam, obj: k.obj})); pintarClaves(); $('nomRec').value = r.nombre; }
+    persistirPropios(); activarRec(r, true); aviso('Recorrido cargado: ' + r.nombre);
+  } catch (err) { aviso('No se pudo leer el recorrido: ' + err.message, 6000); }
+};
+$('bVideo').onclick = grabarVideo;
+$('bCancelVid').onclick = () => cancelarVid = true;
+// materiales
+let matSel = null;
+function pintarListaMat() {
+  const lista = Object.values(MATS).sort((a, b) => b.tris - a.tris);
+  $('listaMat').innerHTML = lista.map(e => `<div class="mat ${matSel === e.id ? 'sel' : ''}" data-id="${e.id}">
+    <input type="checkbox" ${e.visible ? 'checked' : ''} data-vis="${e.id}" title="Mostrar / ocultar">
+    <i style="background:${e.color}"></i><span>#${e.id.replace('MAT_', '')}<br><small>${ACABADOS[e.acabado].nombre}</small></span><small>${(e.tris / 1e6).toFixed(2)} M</small></div>`).join('');
+}
+$('listaMat').addEventListener('click', e => {
+  const v = e.target.dataset.vis; if (v) { const m = MATS[v]; m.visible = e.target.checked; aplicarMaterial(m, false); if (v === 'MAT_008000') { aplicarCubiertas(); if (BANDA.malla) BANDA.malla.visible = m.visible; } guardarLS('a1313_materiales', estadoMateriales()); return; }
+  const d = e.target.closest('.mat'); if (!d) return; matSel = d.dataset.id; pintarListaMat(); abrirEditorMat();
+});
+$('emAcabado').innerHTML = Object.entries(ACABADOS).map(([k, a]) => `<option value="${k}">${a.nombre}</option>`).join('');
+function abrirEditorMat() {
+  const e = MATS[matSel]; if (!e) return; $('editorMat').hidden = false;
+  $('emTitulo').textContent = `Grupo #${e.id.replace('MAT_', '')} · ${e.mallas.length} malla(s) · ${(e.tris / 1e6).toFixed(2)} M triángulos`;
+  $('emAcabado').value = e.acabado; $('emColor').value = e.color;
+  for (const [id, k] of [['emMetal', 'metal'], ['emRug', 'rug'], ['emAlfa', 'alfa'], ['emTex', 'textura'], ['emPolvo', 'polvo']]) { $(id).value = e[k]; $(id + 'O').textContent = (+e[k]).toFixed(2); }
+}
+function cambioMat(reconstruir) { const e = MATS[matSel]; if (!e) return; aplicarMaterial(e, reconstruir); if (matSel === 'MAT_008000') aplicarCubiertas(); pintarListaMat(); guardarLS('a1313_materiales', estadoMateriales()); }
+$('emAcabado').onchange = ev => { MATS[matSel].acabado = ev.target.value; cambioMat(true); };
+$('emColor').oninput = ev => { MATS[matSel].color = ev.target.value; cambioMat(false); };
+for (const [id, k] of [['emMetal', 'metal'], ['emRug', 'rug'], ['emAlfa', 'alfa'], ['emTex', 'textura'], ['emPolvo', 'polvo']])
+  $(id).oninput = ev => { MATS[matSel][k] = +ev.target.value; $(id + 'O').textContent = (+ev.target.value).toFixed(2); cambioMat(false); };
+$('emRestab').onclick = () => { const e = MATS[matSel]; Object.assign(e, structuredClone(e.base)); cambioMat(true); abrirEditorMat(); };
+$('bRestabMat').onclick = () => { for (const e of Object.values(MATS)) { Object.assign(e, structuredClone(e.base)); aplicarMaterial(e); } pintarListaMat(); guardarLS('a1313_materiales', null); if (matSel) abrirEditorMat(); aviso('Materiales restablecidos a los del video'); };
+$('bDescMat').onclick = () => descargar('materiales_1313.json', JSON.stringify({formato: 'materiales-hito-v1', acabados: Object.fromEntries(Object.entries(ACABADOS).map(([k, a]) => [k, a.nombre])), materiales: estadoMateriales()}, null, 1));
+$('bCargMat').onclick = () => $('fileMat').click();
+$('fileMat').onchange = async e => { const f = e.target.files[0]; if (!f) return; e.target.value = '';
+  try { const j = JSON.parse(await f.text()); cargarEstadoMateriales(j.materiales || j, true); guardarLS('a1313_materiales', estadoMateriales()); if (matSel) abrirEditorMat(); }
+  catch (err) { aviso('No se pudo leer el archivo de materiales: ' + err.message, 6000); } };
+// render y luz
+$('selCal').onchange = e => { modoCal = e.target.value; cal = modoCal === 'auto' ? 'alta' : modoCal; medirInicio = performance.now(); vC = vT = 0; crearComposer(); };
+$('selTono').onchange = e => { luz.tono = e.target.value; luz.expo = TONOS[luz.tono].expo; aplicarTono(); };
+$('expo').oninput = e => { luz.expo = +e.target.value; aplicarTono(); };
+$('refl').oninput = e => { luz.reflejos = +e.target.value; $('reflO').textContent = luz.reflejos.toFixed(2); scene.environmentIntensity = 1.2 * luz.reflejos; marcar(); };
+$('az').value = luz.az.toFixed(0); $('azO').textContent = luz.az.toFixed(0) + '°'; $('el').value = luz.el.toFixed(0); $('elO').textContent = luz.el.toFixed(0) + '°';
+let tSol = 0;
+for (const k of ['az', 'el']) $(k).oninput = e => { luz[k] = +e.target.value; $(k + 'O').textContent = luz[k].toFixed(0) + '°'; clearTimeout(tSol); tSol = setTimeout(aplicarSol, 60); };
+$('polvoG').oninput = e => { UG.polvoG.value = +e.target.value; $('polvoGO').textContent = (+e.target.value).toFixed(2); marcar(); };
+$('chkReal').onchange = e => { UG.real.value = e.target.checked ? 1 : 0; marcar(); };
+$('chkGrua').onchange = e => { GRUA.activa = e.target.checked; animarGrua(t); marcar(); };
+if (!GRUA.activa) $('chkGrua').checked = false;
+$('chkSombras').onchange = e => { sol.castShadow = e.target.checked; renderer.shadowMap.needsUpdate = true; for (const m of Object.values(MATS)) if (m.material) m.material.needsUpdate = true; marcar(); };
+$('chkNiebla').onchange = e => { scene.fog = e.target.checked ? new THREE.FogExp2(COLOR_HORIZONTE, 0.00022) : null; marcar(); };
+$('chkSueltos').onchange = e => mostrarSueltos(e.target.checked);
+// correas
+function pintarInfoCorreas() {
+  const I = BANDA.info; if (!I) { $('infoCorreas').textContent = CORREAS ? 'No se encontraron las bandas en el modelo.' : 'Sin datos de correas (hito_correas.json).'; return; }
+  $('infoCorreas').innerHTML = Object.entries(I.porTag).map(([k, r]) => `<b>${k}</b> · ${r.largo.toFixed(0)} m · sentido ${CORREAS.correas.find(c => c.tag === k).sentido_carga === '+x' ? 'domo → torre' : 'torre → chutes x −20'}`).join('<br>')
+    + `<br><small>Superficie de las bandas sobre su línea central medida (${I.superficie} triángulos); ${I.cubiertas.toLocaleString('es-CL')} triángulos de capotas separados del modelo</small>`;
+}
+$('chkCorreas').checked = BANDA.activa; $('chkCarga').checked = BANDA.carga;
+$('velBanda').value = BANDA.vel; $('velBandaO').textContent = BANDA.vel.toFixed(1) + ' m/s';
+$('opCub').value = BANDA.opCub; $('opCubO').textContent = Math.round(100 * BANDA.opCub) + ' %';
+$('chkCorreas').onchange = e => { BANDA.activa = e.target.checked; animarCorreas(t); marcar(); };
+$('chkCarga').onchange = e => { BANDA.carga = e.target.checked; animarCorreas(t); marcar(); };
+$('velBanda').oninput = e => { BANDA.vel = +e.target.value; $('velBandaO').textContent = BANDA.vel.toFixed(1) + ' m/s'; animarCorreas(t); marcar(); };
+let tCub = 0;
+$('opCub').oninput = e => { BANDA.opCub = +e.target.value; BANDA.opCubUsuario = true; $('opCubO').textContent = Math.round(100 * BANDA.opCub) + ' %'; clearTimeout(tCub); tCub = setTimeout(aplicarCubiertas, 80); };
+$('infoSueltos').innerHTML = SUELTOS ? `Se quitaron <b>${SUELTOS.grupos_sueltos}</b> grupos de piezas (<b>${SUELTOS.triangulos_sueltos.toLocaleString('es-CL')}</b> triángulos, ${(100 * SUELTOS.triangulos_sueltos / SUELTOS.triangulos_totales).toFixed(1)} % del modelo).<br>
+  Criterio: piezas que no tocan nada apoyado en el suelo y quedan a más de ${SUELTOS.criterio.hueco_max_bajo_pieza_m} m sobre la superficie que tienen debajo.` : 'Sin datos de elementos sueltos.';
+pintarClaves();
+addEventListener('keydown', e => {
+  if (e.target.matches('input[type=text],input[type=number],select')) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); playPausa(); }
+  else if (k === 'r') $('bRst').click(); else if (k === 'o') alternarLibre(); else if (k === 't') $('bTit').click();
+  else if (k === 'a') agregarClave(); else if (k === 'h') $('panel').classList.toggle('plegado');
+  else if (k === 'c') { const c = ['auto', 'alta', 'media', 'baja']; $('selCal').value = c[(c.indexOf(modoCal) + 1) % 4]; $('selCal').onchange({target: $('selCal')}); }
+  else if (e.key === 'ArrowRight') { alternarLibre(false); t = Math.min(rec.dur, t + 1); aplicar(t); }
+  else if (e.key === 'ArrowLeft') { alternarLibre(false); t = Math.max(0, t - 1); aplicar(t); }
+});
+// pruebas automáticas
+window.irA = s => { alternarLibre(false); play = false; t = s; aplicar(t); if (PRUEBA) { gtao.enabled = aoActiva; composer.render(0); renderer.getContext().finish(); } };
+window.__api = {scene, renderer, composer, cam, THREE, MATS, RECS, BANDA, aplicarCubiertas, vista: (p, o) => { alternarLibre(true); cam.position.set(...p); controls.target.set(...o); controls.update(); gtao.enabled = aoActiva; composer.render(0); renderer.getContext().finish(); }, activar: id => activarRec(RECS.find(r => r.id === id), false), verificar: h => { return cargarDistancias().then(() => verificarRec(rec, h)); },
+  render: () => { gtao.enabled = aoActiva; composer.render(0); renderer.getContext().finish(); }, aplicarMaterial, luz, aplicarSol, ao: v => { aoActiva = v; }};
+</script>
+</body>
+</html>

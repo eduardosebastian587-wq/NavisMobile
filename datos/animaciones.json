@@ -1,0 +1,2614 @@
+{
+ "ayuda": {
+  "objetivo": "TAG exacto \"1313-ML-1402\" | regex \"/^1313-ER-/i\" | \"disciplina:Piping\" | \"todo\" | \"corte\" | \"camara\"",
+  "propiedad": "posicion (Δ m [x,y,z], Y arriba) | rotacion (Δ grados) | escala | visible (0/1) | resplandor (0..1, color opcional) | opacidad | nivel (corte, 0..1 de la altura) | camara: posicion / mira (absolutas; unidad:\"radio\" las expresa en radios del modelo)",
+  "interpolacion": "suave (defecto) | lineal | escalon | curva (spline, ideal para cámara)",
+  "claves": "[[tiempo_s, valor], …]",
+  "ejes": "X = este, Y = arriba, Z = sur (norte = −Z)",
+  "pivotes": "{ \"TAG\": \"centro\" | \"base\" | [x,y,z] } — punto de giro/escala del equipo",
+  "nota": "Los TAG de ejemplo deben existir en el modelo. Cambie 1313-ML-1402 por los suyos. Un id repetido reemplaza a la animación anterior.",
+  "particiones": "Reparten los triángulos de un TAG en partes con nombre. {id, tag, padre, cajas:[[x0,y0,z0,x1,y1,z1],…] (coordenadas LOCALES del modelo; se evalúa el centroide de cada triángulo; gana la primera regla), pivote:[x,y,z], estirable:{y1,y2}, vacio:true}. Sin \"cajas\" = el elemento completo (TAG exacto o /regex/) pasa a ser hijo de \"padre\". Estirable = gancho + cable: rígido por debajo de y1, anclado por encima de y2 y estirado entre ambos al animar su posición Δy. Se usan como \"objetivo\" de las pistas.",
+  "bucle": "Opcional por animación: \"una\" | \"bucle\" | \"vaiven\". Fija el modo de repetición al reproducirla.",
+  "partes_de_esta_planta": "portico › carro_1 › gancho_1p / gancho_1a · (ganchos del 2.º par eliminados) · pluma_1404 › gancho_1404 · pluma_1405 › gancho_1405 · molino_1401 / molino_1402 (equipo completo, para izajes) › molino_1401_giro / molino_1402_giro (solo el tambor gira; cabezales y apoyos quedan fijos). posicion = Δ m respecto del reposo en el sistema del padre; rotacion = Δ grados sobre el pivote."
+ },
+ "particiones": [
+  {
+   "id": "gancho_1p",
+   "tag": "1313-CN-1406",
+   "padre": "carro_1",
+   "cajas": [
+    [
+     -41.0,
+     22.9,
+     4.3,
+     -39.0,
+     28.5,
+     5.9
+    ]
+   ],
+   "estirable": {
+    "y1": 25.0,
+    "y2": 27.5
+   },
+   "pivote": [
+    -40.0,
+    25.0,
+    5.1
+   ]
+  },
+  {
+   "id": "gancho_1a",
+   "tag": "1313-CN-1406",
+   "padre": "carro_1",
+   "cajas": [
+    [
+     -40.8,
+     22.9,
+     6.8,
+     -39.2,
+     28.5,
+     7.6
+    ]
+   ],
+   "estirable": {
+    "y1": 25.2,
+    "y2": 27.5
+   },
+   "pivote": [
+    -40.0,
+    25.0,
+    7.2
+   ]
+  },
+  {
+   "id": "gancho_2p",
+   "tag": "1313-CN-1406",
+   "padre": "carro_2",
+   "cajas": [
+    [
+     -41.0,
+     22.9,
+     -28.139999999999997,
+     -39.0,
+     28.5,
+     -26.54
+    ]
+   ],
+   "estirable": {
+    "y1": 25.0,
+    "y2": 27.5
+   },
+   "pivote": [
+    -40.0,
+    25.0,
+    -27.339999999999996
+   ],
+   "oculto": true
+  },
+  {
+   "id": "gancho_2a",
+   "tag": "1313-CN-1406",
+   "padre": "carro_2",
+   "cajas": [
+    [
+     -40.8,
+     22.9,
+     -25.639999999999997,
+     -39.2,
+     28.5,
+     -24.839999999999996
+    ]
+   ],
+   "estirable": {
+    "y1": 25.2,
+    "y2": 27.5
+   },
+   "pivote": [
+    -40.0,
+    25.0,
+    -25.24
+   ],
+   "oculto": true
+  },
+  {
+   "id": "carro_1",
+   "tag": "1313-CN-1406",
+   "padre": "portico",
+   "cajas": [
+    [
+     -43.6,
+     27.2,
+     3.4,
+     -36.4,
+     30.3,
+     10.1
+    ]
+   ],
+   "pivote": [
+    -40.0,
+    28.0,
+    6.75
+   ]
+  },
+  {
+   "id": "carro_2",
+   "tag": "1313-CN-1406",
+   "padre": "portico",
+   "vacio": true,
+   "pivote": [
+    -40.0,
+    28.0,
+    -25.689999999999998
+   ]
+  },
+  {
+   "id": "m_carro",
+   "tag": "/^1313-CN-1406-M[1-4]$/",
+   "padre": "carro_1"
+  },
+  {
+   "id": "portico",
+   "tag": "1313-CN-1406",
+   "padre": null,
+   "cajas": [
+    [
+     -48.45,
+     -1.3,
+     -60,
+     -28.0,
+     40,
+     60
+    ]
+   ],
+   "pivote": [
+    -40.0,
+    -1.0,
+    4.0
+   ]
+  },
+  {
+   "id": "m_ruedas",
+   "tag": "/^1313-CN-1406-M(5|6|7|8|9|10|11|12)$/",
+   "padre": "portico"
+  },
+  {
+   "id": "gancho_1404",
+   "tag": "1313-CN-1404",
+   "padre": "pluma_1404",
+   "cajas": [
+    [
+     -25.45,
+     20.1,
+     8.2,
+     -25.12,
+     21.1,
+     8.62
+    ]
+   ],
+   "estirable": {
+    "y1": 20.66,
+    "y2": 20.9
+   },
+   "pivote": [
+    -25.3,
+    20.4,
+    8.4
+   ]
+  },
+  {
+   "id": "pluma_1404",
+   "tag": "1313-CN-1404",
+   "padre": null,
+   "cajas": [
+    [
+     -10000.0,
+     20.74,
+     -10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    [
+     -27.6,
+     20.1,
+     -10000.0,
+     10000.0,
+     20.74,
+     10000.0
+    ]
+   ],
+   "pivote": [
+    -37.79,
+    20.9,
+    8.41
+   ]
+  },
+  {
+   "id": "m_1404",
+   "tag": "/^1313-CN-1404-M[1-4]$/",
+   "padre": "pluma_1404"
+  },
+  {
+   "id": "gancho_1405",
+   "tag": "1313-CN-1405",
+   "padre": "pluma_1405",
+   "cajas": [
+    [
+     -22.849999999999998,
+     20.1,
+     21.979999999999997,
+     -22.52,
+     21.1,
+     22.4
+    ]
+   ],
+   "estirable": {
+    "y1": 20.66,
+    "y2": 20.9
+   },
+   "pivote": [
+    -22.7,
+    20.4,
+    22.18
+   ]
+  },
+  {
+   "id": "pluma_1405",
+   "tag": "1313-CN-1405",
+   "padre": null,
+   "cajas": [
+    [
+     -10000.0,
+     20.74,
+     -10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    [
+     -25.0,
+     20.1,
+     -10000.0,
+     10000.0,
+     20.74,
+     10000.0
+    ]
+   ],
+   "pivote": [
+    -35.19,
+    20.9,
+    22.189999999999998
+   ]
+  },
+  {
+   "id": "m_1405",
+   "tag": "/^1313-CN-1405-M[1-4]$/",
+   "padre": "pluma_1405"
+  },
+  {
+   "id": "molino_1401_giro",
+   "tag": "1313-ML-1401",
+   "padre": "molino_1401",
+   "cajas": [
+    [
+     -16.24,
+     null,
+     null,
+     -0.66,
+     null,
+     null
+    ]
+   ],
+   "pivote": [
+    -8.39,
+    -0.406,
+    -8.29
+   ]
+  },
+  {
+   "id": "molino_1401",
+   "tag": "1313-ML-1401",
+   "padre": null,
+   "cajas": [
+    [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "pivote": [
+    -8.39,
+    -0.406,
+    -8.29
+   ]
+  },
+  {
+   "id": "molino_1402_giro",
+   "tag": "1313-ML-1402",
+   "padre": "molino_1402",
+   "cajas": [
+    [
+     -16.24,
+     null,
+     null,
+     -0.66,
+     null,
+     null
+    ]
+   ],
+   "pivote": [
+    -8.39,
+    -0.406,
+    16.71
+   ]
+  },
+  {
+   "id": "molino_1402",
+   "tag": "1313-ML-1402",
+   "padre": null,
+   "cajas": [
+    [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "pivote": [
+    -8.39,
+    -0.406,
+    16.71
+   ]
+  }
+ ],
+ "animaciones": [
+  {
+   "id": "ciclo-completo",
+   "nombre": "Ciclo operativo completo (pórtico + molinos + pescantes)",
+   "descripcion": "El pórtico CN-1406 se traslada sobre sus rieles hasta los molinos, los carros se ubican sobre cada molino y los 4 ganchos bajan y suben; los pescantes CN-1404/1405 giran sobre su eje y operan su gancho; ambos molinos giran todo el ciclo.",
+   "duracion": 60,
+   "pistas": [
+    {
+     "objetivo": "molino_1401_giro",
+     "propiedad": "rotacion",
+     "interpolacion": "lineal",
+     "claves": [
+      [
+       0.0,
+       [
+        0.0,
+        0,
+        0
+       ]
+      ],
+      [
+       1.5,
+       [
+        90.0,
+        0,
+        0
+       ]
+      ],
+      [
+       3.0,
+       [
+        180.0,
+        0,
+        0
+       ]
+      ],
+      [
+       4.5,
+       [
+        270.0,
+        0,
+        0
+       ]
+      ],
+      [
+       6.0,
+       [
+        360.0,
+        0,
+        0
+       ]
+      ],
+      [
+       7.5,
+       [
+        450.0,
+        0,
+        0
+       ]
+      ],
+      [
+       9.0,
+       [
+        540.0,
+        0,
+        0
+       ]
+      ],
+      [
+       10.5,
+       [
+        630.0,
+        0,
+        0
+       ]
+      ],
+      [
+       12.0,
+       [
+        720.0,
+        0,
+        0
+       ]
+      ],
+      [
+       13.5,
+       [
+        810.0,
+        0,
+        0
+       ]
+      ],
+      [
+       15.0,
+       [
+        900.0,
+        0,
+        0
+       ]
+      ],
+      [
+       16.5,
+       [
+        990.0,
+        0,
+        0
+       ]
+      ],
+      [
+       18.0,
+       [
+        1080.0,
+        0,
+        0
+       ]
+      ],
+      [
+       19.5,
+       [
+        1170.0,
+        0,
+        0
+       ]
+      ],
+      [
+       21.0,
+       [
+        1260.0,
+        0,
+        0
+       ]
+      ],
+      [
+       22.5,
+       [
+        1350.0,
+        0,
+        0
+       ]
+      ],
+      [
+       24.0,
+       [
+        1440.0,
+        0,
+        0
+       ]
+      ],
+      [
+       25.5,
+       [
+        1530.0,
+        0,
+        0
+       ]
+      ],
+      [
+       27.0,
+       [
+        1620.0,
+        0,
+        0
+       ]
+      ],
+      [
+       28.5,
+       [
+        1710.0,
+        0,
+        0
+       ]
+      ],
+      [
+       30.0,
+       [
+        1800.0,
+        0,
+        0
+       ]
+      ],
+      [
+       31.5,
+       [
+        1890.0,
+        0,
+        0
+       ]
+      ],
+      [
+       33.0,
+       [
+        1980.0,
+        0,
+        0
+       ]
+      ],
+      [
+       34.5,
+       [
+        2070.0,
+        0,
+        0
+       ]
+      ],
+      [
+       36.0,
+       [
+        2160.0,
+        0,
+        0
+       ]
+      ],
+      [
+       37.5,
+       [
+        2250.0,
+        0,
+        0
+       ]
+      ],
+      [
+       39.0,
+       [
+        2340.0,
+        0,
+        0
+       ]
+      ],
+      [
+       40.5,
+       [
+        2430.0,
+        0,
+        0
+       ]
+      ],
+      [
+       42.0,
+       [
+        2520.0,
+        0,
+        0
+       ]
+      ],
+      [
+       43.5,
+       [
+        2610.0,
+        0,
+        0
+       ]
+      ],
+      [
+       45.0,
+       [
+        2700.0,
+        0,
+        0
+       ]
+      ],
+      [
+       46.5,
+       [
+        2790.0,
+        0,
+        0
+       ]
+      ],
+      [
+       48.0,
+       [
+        2880.0,
+        0,
+        0
+       ]
+      ],
+      [
+       49.5,
+       [
+        2970.0,
+        0,
+        0
+       ]
+      ],
+      [
+       51.0,
+       [
+        3060.0,
+        0,
+        0
+       ]
+      ],
+      [
+       52.5,
+       [
+        3150.0,
+        0,
+        0
+       ]
+      ],
+      [
+       54.0,
+       [
+        3240.0,
+        0,
+        0
+       ]
+      ],
+      [
+       55.5,
+       [
+        3330.0,
+        0,
+        0
+       ]
+      ],
+      [
+       57.0,
+       [
+        3420.0,
+        0,
+        0
+       ]
+      ],
+      [
+       58.5,
+       [
+        3510.0,
+        0,
+        0
+       ]
+      ],
+      [
+       60.0,
+       [
+        3600.0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "molino_1402_giro",
+     "propiedad": "rotacion",
+     "interpolacion": "lineal",
+     "claves": [
+      [
+       0.0,
+       [
+        0.0,
+        0,
+        0
+       ]
+      ],
+      [
+       1.5,
+       [
+        90.0,
+        0,
+        0
+       ]
+      ],
+      [
+       3.0,
+       [
+        180.0,
+        0,
+        0
+       ]
+      ],
+      [
+       4.5,
+       [
+        270.0,
+        0,
+        0
+       ]
+      ],
+      [
+       6.0,
+       [
+        360.0,
+        0,
+        0
+       ]
+      ],
+      [
+       7.5,
+       [
+        450.0,
+        0,
+        0
+       ]
+      ],
+      [
+       9.0,
+       [
+        540.0,
+        0,
+        0
+       ]
+      ],
+      [
+       10.5,
+       [
+        630.0,
+        0,
+        0
+       ]
+      ],
+      [
+       12.0,
+       [
+        720.0,
+        0,
+        0
+       ]
+      ],
+      [
+       13.5,
+       [
+        810.0,
+        0,
+        0
+       ]
+      ],
+      [
+       15.0,
+       [
+        900.0,
+        0,
+        0
+       ]
+      ],
+      [
+       16.5,
+       [
+        990.0,
+        0,
+        0
+       ]
+      ],
+      [
+       18.0,
+       [
+        1080.0,
+        0,
+        0
+       ]
+      ],
+      [
+       19.5,
+       [
+        1170.0,
+        0,
+        0
+       ]
+      ],
+      [
+       21.0,
+       [
+        1260.0,
+        0,
+        0
+       ]
+      ],
+      [
+       22.5,
+       [
+        1350.0,
+        0,
+        0
+       ]
+      ],
+      [
+       24.0,
+       [
+        1440.0,
+        0,
+        0
+       ]
+      ],
+      [
+       25.5,
+       [
+        1530.0,
+        0,
+        0
+       ]
+      ],
+      [
+       27.0,
+       [
+        1620.0,
+        0,
+        0
+       ]
+      ],
+      [
+       28.5,
+       [
+        1710.0,
+        0,
+        0
+       ]
+      ],
+      [
+       30.0,
+       [
+        1800.0,
+        0,
+        0
+       ]
+      ],
+      [
+       31.5,
+       [
+        1890.0,
+        0,
+        0
+       ]
+      ],
+      [
+       33.0,
+       [
+        1980.0,
+        0,
+        0
+       ]
+      ],
+      [
+       34.5,
+       [
+        2070.0,
+        0,
+        0
+       ]
+      ],
+      [
+       36.0,
+       [
+        2160.0,
+        0,
+        0
+       ]
+      ],
+      [
+       37.5,
+       [
+        2250.0,
+        0,
+        0
+       ]
+      ],
+      [
+       39.0,
+       [
+        2340.0,
+        0,
+        0
+       ]
+      ],
+      [
+       40.5,
+       [
+        2430.0,
+        0,
+        0
+       ]
+      ],
+      [
+       42.0,
+       [
+        2520.0,
+        0,
+        0
+       ]
+      ],
+      [
+       43.5,
+       [
+        2610.0,
+        0,
+        0
+       ]
+      ],
+      [
+       45.0,
+       [
+        2700.0,
+        0,
+        0
+       ]
+      ],
+      [
+       46.5,
+       [
+        2790.0,
+        0,
+        0
+       ]
+      ],
+      [
+       48.0,
+       [
+        2880.0,
+        0,
+        0
+       ]
+      ],
+      [
+       49.5,
+       [
+        2970.0,
+        0,
+        0
+       ]
+      ],
+      [
+       51.0,
+       [
+        3060.0,
+        0,
+        0
+       ]
+      ],
+      [
+       52.5,
+       [
+        3150.0,
+        0,
+        0
+       ]
+      ],
+      [
+       54.0,
+       [
+        3240.0,
+        0,
+        0
+       ]
+      ],
+      [
+       55.5,
+       [
+        3330.0,
+        0,
+        0
+       ]
+      ],
+      [
+       57.0,
+       [
+        3420.0,
+        0,
+        0
+       ]
+      ],
+      [
+       58.5,
+       [
+        3510.0,
+        0,
+        0
+       ]
+      ],
+      [
+       60.0,
+       [
+        3600.0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "portico",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       2,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       14,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       44,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       56,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_1",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       14,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       22,
+       [
+        0,
+        0,
+        11.6
+       ]
+      ],
+      [
+       44,
+       [
+        0,
+        0,
+        11.6
+       ]
+      ],
+      [
+       52,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_2",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       14,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       22,
+       [
+        0,
+        0,
+        19.05
+       ]
+      ],
+      [
+       44,
+       [
+        0,
+        0,
+        19.05
+       ]
+      ],
+      [
+       52,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1p",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       22,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       28,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       34,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       40,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1a",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       22.5,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       28.5,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       34.5,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       40.5,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "pluma_1404",
+     "propiedad": "rotacion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       4,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       12,
+       [
+        0,
+        70.0,
+        0
+       ]
+      ],
+      [
+       30,
+       [
+        0,
+        70.0,
+        0
+       ]
+      ],
+      [
+       38,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "pluma_1405",
+     "propiedad": "rotacion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       7,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       15,
+       [
+        0,
+        -70.0,
+        0
+       ]
+      ],
+      [
+       33,
+       [
+        0,
+        -70.0,
+        0
+       ]
+      ],
+      [
+       41,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1404",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       12,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       30,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1405",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       15,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       21,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       27,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       33,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "camara",
+     "propiedad": "posicion",
+     "interpolacion": "curva",
+     "claves": [
+      [
+       0,
+       [
+        -95,
+        40,
+        78
+       ]
+      ],
+      [
+       14,
+       [
+        -72,
+        30,
+        98
+       ]
+      ],
+      [
+       28,
+       [
+        10,
+        44,
+        96
+       ]
+      ],
+      [
+       42,
+       [
+        34,
+        40,
+        -34
+       ]
+      ],
+      [
+       60,
+       [
+        -92,
+        46,
+        -26
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "camara",
+     "propiedad": "mira",
+     "interpolacion": "curva",
+     "claves": [
+      [
+       0,
+       [
+        -30,
+        10,
+        6
+       ]
+      ],
+      [
+       14,
+       [
+        -14,
+        10,
+        6
+       ]
+      ],
+      [
+       28,
+       [
+        -12,
+        9,
+        8
+       ]
+      ],
+      [
+       42,
+       [
+        -14,
+        9,
+        5
+       ]
+      ],
+      [
+       60,
+       [
+        -30,
+        10,
+        6
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "portico-rieles",
+   "nombre": "Pórtico CN-1406: traslado por rieles, carros y ganchos",
+   "descripcion": "El pórtico avanza 32 m sobre sus rieles; luego cada carro corre por el puente hasta el eje de un molino y sus ganchos (principal y auxiliar) bajan y suben.",
+   "duracion": 44,
+   "pistas": [
+    {
+     "objetivo": "portico",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       1,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       11,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       35,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       44,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_1",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       11,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        0,
+        11.6
+       ]
+      ],
+      [
+       34,
+       [
+        0,
+        0,
+        11.6
+       ]
+      ],
+      [
+       42,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_2",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       11,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        0,
+        19.05
+       ]
+      ],
+      [
+       34,
+       [
+        0,
+        0,
+        19.05
+       ]
+      ],
+      [
+       42,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1p",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       23,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       28,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       33,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1a",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18.5,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       23.5,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       28.5,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       33.5,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "molinos-giro",
+   "nombre": "Molinos ML-1401 / ML-1402: giro continuo (bucle)",
+   "descripcion": "Los dos molinos giran sincronizados (1 vuelta cada 6 s a velocidad 1×; ~10 rpm de referencia visual) con franjas guía para ver el movimiento.",
+   "duracion": 6,
+   "bucle": "bucle",
+   "pistas": [
+    {
+     "objetivo": "molino_1401_giro",
+     "propiedad": "rotacion",
+     "interpolacion": "lineal",
+     "claves": [
+      [
+       0.0,
+       [
+        0.0,
+        0,
+        0
+       ]
+      ],
+      [
+       1.5,
+       [
+        90.0,
+        0,
+        0
+       ]
+      ],
+      [
+       3.0,
+       [
+        180.0,
+        0,
+        0
+       ]
+      ],
+      [
+       4.5,
+       [
+        270.0,
+        0,
+        0
+       ]
+      ],
+      [
+       6.0,
+       [
+        360.0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "molino_1402_giro",
+     "propiedad": "rotacion",
+     "interpolacion": "lineal",
+     "claves": [
+      [
+       0.0,
+       [
+        0.0,
+        0,
+        0
+       ]
+      ],
+      [
+       1.5,
+       [
+        90.0,
+        0,
+        0
+       ]
+      ],
+      [
+       3.0,
+       [
+        180.0,
+        0,
+        0
+       ]
+      ],
+      [
+       4.5,
+       [
+        270.0,
+        0,
+        0
+       ]
+      ],
+      [
+       6.0,
+       [
+        360.0,
+        0,
+        0
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pescantes",
+   "nombre": "Pescantes CN-1404 / CN-1405: giro sobre su eje y gancho",
+   "descripcion": "Cada pescante gira su pluma ±70° sobre la columna y baja/sube su gancho (el 1405 opera desfasado 3 s; cambie los tiempos para operación simultánea).",
+   "duracion": 44,
+   "pistas": [
+    {
+     "objetivo": "pluma_1404",
+     "propiedad": "rotacion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       1,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       9,
+       [
+        0,
+        70.0,
+        0
+       ]
+      ],
+      [
+       27,
+       [
+        0,
+        70.0,
+        0
+       ]
+      ],
+      [
+       35,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "pluma_1405",
+     "propiedad": "rotacion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       4,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       12,
+       [
+        0,
+        -70.0,
+        0
+       ]
+      ],
+      [
+       30,
+       [
+        0,
+        -70.0,
+        0
+       ]
+      ],
+      [
+       38,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1404",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       9,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       15,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       21,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       27,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1405",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       12,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       30,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ganchos",
+   "nombre": "Ganchos: bajada y subida (pórtico sobre molinos + pescantes)",
+   "descripcion": "Con el pórtico ya sobre los molinos, los 4 ganchos del pórtico y los 2 de pescante bajan y suben a la vez; el cable se alarga con el gancho.",
+   "duracion": 26,
+   "pistas": [
+    {
+     "objetivo": "portico",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       6,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       25,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ],
+      [
+       26,
+       [
+        32.0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_1",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       6,
+       [
+        0,
+        0,
+        11.6
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "carro_2",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       6,
+       [
+        0,
+        0,
+        19.05
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1p",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       7,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       13,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -12.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1a",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       7,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       13,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -11.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1404",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       7,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       13,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "gancho_1405",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       7,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       13,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       18,
+       [
+        0,
+        -10.0,
+        0
+       ]
+      ],
+      [
+       24,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ejemplo-izaje",
+   "nombre": "Izaje de 1313-ML-1402 (ejemplo editable)",
+   "descripcion": "Eleva el equipo 22 m, lo traslada 14 m al este, lo gira 90° y lo vuelve a bajar.",
+   "duracion": 16,
+   "pistas": [
+    {
+     "objetivo": "molino_1402",
+     "propiedad": "posicion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       3,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       8,
+       [
+        0,
+        22,
+        0
+       ]
+      ],
+      [
+       10.5,
+       [
+        14,
+        22,
+        0
+       ]
+      ],
+      [
+       15,
+       [
+        14,
+        1,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "molino_1402",
+     "propiedad": "rotacion",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       8,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       10.5,
+       [
+        0,
+        90,
+        0
+       ]
+      ],
+      [
+       15,
+       [
+        0,
+        90,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "molino_1402",
+     "propiedad": "resplandor",
+     "color": "#fbbf24",
+     "claves": [
+      [
+       0,
+       0
+      ],
+      [
+       1.5,
+       1
+      ],
+      [
+       3,
+       0.35
+      ],
+      [
+       15,
+       0.35
+      ],
+      [
+       16,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "secuencia-4d",
+   "nombre": "Secuencia por disciplina (ejemplo 4D)",
+   "descripcion": "Aparecen en orden estructura → mecánico → piping → eléctrico, con la cámara en órbita suave.",
+   "duracion": 20,
+   "pistas": [
+    {
+     "objetivo": "disciplina:Structural",
+     "propiedad": "visible",
+     "interpolacion": "escalon",
+     "claves": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "objetivo": "disciplina:Mechanical",
+     "propiedad": "visible",
+     "interpolacion": "escalon",
+     "claves": [
+      [
+       0,
+       0
+      ],
+      [
+       6,
+       1
+      ]
+     ]
+    },
+    {
+     "objetivo": "disciplina:Piping",
+     "propiedad": "visible",
+     "interpolacion": "escalon",
+     "claves": [
+      [
+       0,
+       0
+      ],
+      [
+       11,
+       1
+      ]
+     ]
+    },
+    {
+     "objetivo": "disciplina:Electrical",
+     "propiedad": "visible",
+     "interpolacion": "escalon",
+     "claves": [
+      [
+       0,
+       0
+      ],
+      [
+       15,
+       1
+      ]
+     ]
+    },
+    {
+     "objetivo": "camara",
+     "propiedad": "posicion",
+     "unidad": "radio",
+     "interpolacion": "curva",
+     "claves": [
+      [
+       0,
+       [
+        1.1,
+        0.7,
+        1.1
+       ]
+      ],
+      [
+       7,
+       [
+        1.4,
+        0.8,
+        -0.2
+       ]
+      ],
+      [
+       14,
+       [
+        0.3,
+        0.8,
+        -1.4
+       ]
+      ],
+      [
+       20,
+       [
+        -1.1,
+        0.7,
+        -0.8
+       ]
+      ]
+     ]
+    },
+    {
+     "objetivo": "camara",
+     "propiedad": "mira",
+     "unidad": "radio",
+     "claves": [
+      [
+       0,
+       [
+        0,
+        0,
+        0
+       ]
+      ],
+      [
+       20,
+       [
+        0,
+        0,
+        0
+       ]
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}
