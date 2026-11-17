@@ -55,3 +55,10 @@ Pendiente: todo lo siguiente.
 ## Fase F — Entrega (§9)
 24. Push a la rama de trabajo; informe al usuario: hecho/probado, no probado (teléfono real), desinstalar APK anterior,
     copiar `area1313_movil.glb` a Drive. Preguntar si se fusiona a `main` / se crea PR.
+
+## Actualización final de la sesión (2026-11-17)
+Hecho además: descarga nativa en Android (fix 403/CORS de Drive), pruebas en Xiaomi 14T Pro (puntos 1–5 OK), ajustes de doble toque/zoom/barra de tiempo,
+barras del sistema sin solapar la app, Capas con tags de correas/equipos y buscador (APK commit 72514c7).
+Siguiente: (a) `docs/PRUEBA_LOCAL_BARRAS_TAGS.md` en el teléfono; (b) `docs/PLAN_EXPORTAR_TAGS.md` (tags por equipo, requiere decisiones de alcance con el usuario);
+(c) decidir fusión de la rama a `main` (tarea 24, pendiente; `main` aún no tiene la app).
+Guías: `docs/CONTEXTO_SESION_LOCAL.md`, `docs/PRUEBA_APK_LOCAL.md`.
