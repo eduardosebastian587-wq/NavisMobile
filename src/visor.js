@@ -28,10 +28,10 @@ export class Visor {
     this.ayudantes = new THREE.Group(); this.ayudantes.traverse?.(() => {}); this.scene.add(this.ayudantes);
     this.raiz = null; this.mallas = []; this.caja = new THREE.Box3(new THREE.Vector3(-50, 0, -50), new THREE.Vector3(50, 30, 50));
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x555566, 0.6));
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x555566, 0.3));
     this.sol = new THREE.DirectionalLight(0xffffff, 1.2); this.sol.position.set(300, 800, 400); this.scene.add(this.sol);
     const pm = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+    this.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; this.scene.environmentIntensity = 0.5; pm.dispose();
 
     this.draco = new DRACOLoader().setDecoderPath(import.meta.env.BASE_URL + 'draco/');
     this.gltf = new GLTFLoader().setDRACOLoader(this.draco);
