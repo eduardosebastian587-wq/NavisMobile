@@ -11,10 +11,15 @@ function textura() {
 export class Correas {
   constructor(json) {
     this.grupo = new THREE.Group(); this.grupo.name = 'correas'; this.mats = []; this.activa = true;
-    for (const cor of json.correas) for (const tr of cor.tramos) this._tramo(tr);
+    this.porTag = [];
+    for (const cor of json.correas) {
+      const g = new THREE.Group(); g.name = cor.tag; g.userData = { tag: cor.tag, sentido: cor.sentido_carga };
+      for (const tr of cor.tramos) this._tramo(tr, g);
+      this.grupo.add(g); this.porTag.push(g);
+    }
     this.grupo.traverse((o) => o.layers.set(1));
   }
-  _tramo(tr) {
+  _tramo(tr, padre) {
     // ejes Blender (x, y, z) → Three (x, z, -y)
     const P = tr.puntos.map(([x, y, z]) => new THREE.Vector3(x, z, -y)), w = tr.ancho_m || 1;
     const pos = [], uv = [], idx = []; let acc = 0;
@@ -33,7 +38,7 @@ export class Correas {
     const tex = textura(); tex.repeat.set(1, 1 / 1.0); // 1 franja por metro
     const m = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     m.userData.retorno = tr.tipo === 'retorno'; this.mats.push(m);
-    const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; this.grupo.add(mesh);
+    const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; padre.add(mesh);
   }
   /** Avanza las franjas; devuelve true si hubo movimiento. */
   actualizar(dt) {

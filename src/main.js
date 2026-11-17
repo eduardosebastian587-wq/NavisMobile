@@ -114,15 +114,35 @@ async function abrir(esc, mo) {
 
 // ------------------------------------------------------------------ capas / propiedades
 function actualizarCapas() {
-  const p = $('#capas'); p.innerHTML = '';
+  const p = $('#capas'); p.innerHTML = '<input id="filtroCapas" type="search" placeholder="Buscar capa o tag…" style="width:100%;margin-bottom:6px"><div id="listaCapas"></div>';
+  const L = $('#listaCapas');
+  const fila = ({ color, titulo, sub, visible, onVis, onClick, buscar, idx }) => {
+    const it = document.createElement('div'); it.className = 'item'; it.dataset.b = (buscar || titulo).toLowerCase(); if (idx != null) it.dataset.i = idx;
+    it.innerHTML = `<input type="checkbox" ${visible ? 'checked' : ''}>${color ? `<span class="sw" style="background:${color}"></span>` : ''}<div class="gr">${ht(titulo)}<small>${ht(sub)}</small></div>`;
+    $('input', it).onclick = (e) => { e.stopPropagation(); onVis(e.target.checked); visor.invalidar(); };
+    it.onclick = onClick; L.appendChild(it);
+  };
+  const cab = (t) => L.insertAdjacentHTML('beforeend', `<div class="cat">${ht(t)}</div>`);
+  if (E.correas) {
+    cab('Correas (tag)');
+    E.correas.porTag.forEach((g) => fila({ titulo: g.userData.tag, sub: `Sentido de carga ${g.userData.sentido}`, visible: g.visible, onVis: (v) => (g.visible = v),
+      onClick: () => { nav.recordar(); nav.encuadrar(new THREE.Box3().setFromObject(g)); } }));
+  }
+  if (E.equipos) {
+    cab('Equipos (tag)');
+    for (const [id, g] of E.equipos.nodos) {
+      const caja = new THREE.Box3().setFromObject(g); if (caja.isEmpty()) continue;
+      fila({ titulo: id, sub: 'Equipo animado', visible: g.visible, onVis: (v) => (g.visible = v), onClick: () => { nav.recordar(); nav.encuadrar(new THREE.Box3().setFromObject(g)); } });
+    }
+  }
+  cab('Capas del modelo');
   visor.mallas.forEach((m) => {
-    const c = m.material.color ? '#' + m.material.color.getHexString() : '#888';
-    const it = document.createElement('div'); it.className = 'item'; it.dataset.i = m.userData.idx;
-    it.innerHTML = `<input type="checkbox" ${m.visible ? 'checked' : ''}><span class="sw" style="background:${c}"></span><div class="gr">${ht(m.name || 'malla ' + m.userData.idx)}<small>${m.userData.tris.toLocaleString('es')} triángulos</small></div>`;
-    $('input', it).onclick = (e) => { e.stopPropagation(); m.visible = e.target.checked; visor.invalidar(); };
-    it.onclick = () => seleccionar(m);
-    p.appendChild(it);
+    const x = m.userData, tag = x.tag ? ` · tag ${x.tag}` : '';
+    fila({ color: m.material.color ? '#' + m.material.color.getHexString() : '#888', titulo: m.name || 'malla ' + x.idx, sub: `${x.tris.toLocaleString('es')} triángulos${tag}`,
+      visible: m.visible, onVis: (v) => (m.visible = v), onClick: () => seleccionar(m), buscar: `${m.name} ${x.tag || ''} ${x.ruta || ''}`, idx: x.idx });
+    L.lastChild.querySelector('input').onclick = (e) => { e.stopPropagation(); m.visible = e.target.checked; visor.invalidar(); };
   });
+  $('#filtroCapas').oninput = (e) => { const q = e.target.value.toLowerCase().trim(); $$('#listaCapas .item').forEach((i) => (i.style.display = !q || i.dataset.b.includes(q) ? '' : 'none')); };
 }
 function seleccionar(m) {
   E.sel = m; $$('#capas .item').forEach((i) => i.classList.toggle('sel', m && +i.dataset.i === m.userData.idx));
@@ -135,6 +155,7 @@ function mostrarProps(m) {
   const f = (n) => n.toFixed(2) + ' m', fila = (k, v) => `<div class="row"><b>${k}</b><span>${ht(v)}</span></div>`;
   p.innerHTML = fila('Nombre', m.name || '—') + fila('Material', mat.name || mat.type) + fila('Triángulos', m.userData.tris.toLocaleString('es'))
     + fila('Dimensiones', `${f(s.x)} × ${f(s.y)} × ${f(s.z)}`) + (mat.color ? fila('Color', '#' + mat.color.getHexString()) : '')
+    + Object.entries(m.userData).filter(([k, v]) => !['idx', 'tris', 'idMat'].includes(k) && typeof v !== 'object').map(([k, v]) => fila(k, String(v))).join('')
     + (mat.metalness != null ? fila('Metal / rugosidad', `${mat.metalness.toFixed(2)} / ${mat.roughness.toFixed(2)}`) : '');
 }
 function tocar(x, y) {
