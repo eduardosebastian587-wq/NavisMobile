@@ -174,7 +174,7 @@ export class Visor {
     if (!b) return null;
     // desempaquetado: dot(enc, 1/(1, 255, 65025, 16581375)) con enc en [0,1)
     const d = (b[0] / 255) + (b[1] / 255) / 255 + (b[2] / 255) / 65025 + (b[3] / 255) / 16581375;
-    if (d >= 0.99999) return null;
+    if (b[0] === 255 && b[1] === 255 && b[2] === 255 && b[3] === 255) return null;
     const nx = x / this.canvas.clientWidth * 2 - 1, ny = -(y / this.canvas.clientHeight) * 2 + 1;
     return new THREE.Vector3(nx, ny, d * 2 - 1).unproject(this.camera);
   }
