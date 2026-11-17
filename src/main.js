@@ -139,7 +139,7 @@ function mostrarProps(m) {
 }
 function tocar(x, y) {
   if (E.medir) return medirPunto(x, y);
-  const m = visor.mallaEn(x, y); seleccionar(m); if (m) marcarTab('props');
+  const m = visor.mallaEn(x, y); seleccionar(m);
 }
 
 // ------------------------------------------------------------------ barra
@@ -244,7 +244,7 @@ function renderAnim() {
       <div class="ctl"><input id="recT" type="range" min="0" max="1000" value="0"><span id="recTxt">0 s</span></div>
       <div class="ctl"><span>Velocidad</span><input id="recV" type="range" min="0.25" max="2" step="0.25" value="1"><b id="recVv">1×</b></div>`);
     $('#recPlay').onclick = reproducirRec; $('#recStop').onclick = () => { E.recorrido?.detener(); $('#recPlay').textContent = '▶'; visor.invalidar(); };
-    $('#recT').oninput = (e) => { if (E.recorrido) { E.recorrido.nav.bloqueada = true; E.recorrido.ir(e.target.value / 1000 * E.recorrido.duracion); aplicarCiclo(); } };
+    $('#recT').oninput = (e) => { if (E.recorrido) { E.recorrido.nav.bloqueada = true; E.recorrido.ir(e.target.value / 1000 * E.recorrido.duracion); aplicarCiclo(); $('#recTxt').textContent = E.recorrido.t.toFixed(1) + ' s'; } };
     $('#recV').oninput = (e) => { if (E.recorrido) E.recorrido.velocidad = +e.target.value; $('#recVv').textContent = e.target.value + '×'; };
   }
   if (E.equipos?.anims.length) {

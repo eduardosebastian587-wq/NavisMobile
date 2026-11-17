@@ -90,7 +90,7 @@ export class Navegacion {
   /** Zoom por factor (<1 acerca) manteniendo fijo en pantalla el punto «ancla». */
   zoom(factor, ancla = this.mira) {
     const cam = this.camera.position, d = cam.distanceTo(ancla);
-    const min = 0.05, max = this.radio * 12;
+    const min = 0.3, max = this.radio * 12;
     if (d * factor < min) factor = min / d; if (d * factor > max) factor = max / d;
     const a = v1.copy(ancla);
     cam.sub(a).multiplyScalar(factor).add(a);
