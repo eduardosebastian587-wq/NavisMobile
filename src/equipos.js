@@ -14,10 +14,10 @@ export function montarEquipos(json, buf) {
     const g = new THREE.Group(); g.name = p.id; g.userData.parte = p;
     nodos.set(p.id, g);
   }
+  for (const p of json.partes) nodos.get(p.id).userData.pivote = new THREE.Vector3().fromArray(pivoteDe(p));
   // 2) jerarquía y posiciones relativas al pivote del padre
   for (const p of json.partes) {
-    const g = nodos.get(p.id), piv = new THREE.Vector3().fromArray(pivoteDe(p));
-    g.userData.pivote = piv;
+    const g = nodos.get(p.id), piv = g.userData.pivote;
     const padre = p.padre && nodos.get(p.padre);
     if (padre) { g.position.copy(piv).sub(padre.userData.pivote); padre.add(g); } else { g.position.copy(piv); marco.add(g); raices.push(g); }
     g.userData.rest = g.position.clone();
