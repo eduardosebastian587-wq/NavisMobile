@@ -4,3 +4,6 @@ android/app/build
 android/.gradle
 android/local.properties
 datos_locales
+apk/*.tmp
+android/build
+android/capacitor-cordova-android-plugins

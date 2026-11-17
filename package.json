@@ -1,10 +1,11 @@
 {
   "name": "navismobile",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Visor móvil de modelos 3D alimentado desde Google Drive",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "catalogo": "node tools/sincronizar_catalogo.mjs"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,6 @@
     "@capacitor/cli": "^8.6.2",
     "@gltf-transform/cli": "^4.5.1",
     "vite": "^8.3.8"
-  }
+  },
+  "type": "module"
 }

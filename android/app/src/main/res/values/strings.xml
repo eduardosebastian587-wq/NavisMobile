@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NavisMobile</string>
+    <string name="title_activity_main">NavisMobile</string>
+    <string name="package_name">com.navismobile.viewer</string>
+    <string name="custom_url_scheme">com.navismobile.viewer</string>
+</resources>
