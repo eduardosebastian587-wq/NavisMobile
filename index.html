@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>NavisMobile</title>
+<link rel="stylesheet" href="/src/estilos.css">
+<script type="module" src="/src/main.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="side">
+    <div class="tabs">
+      <button data-p="escenas" class="on">Escenas</button>
+      <button data-p="capas">Capas</button>
+      <button data-p="props">Propiedades</button>
+      <button data-p="vistas">Vistas</button>
+      <button data-p="anim">Animación</button>
+    </div>
+    <div class="pane on" id="escenas"></div>
+    <div class="pane" id="capas"></div>
+    <div class="pane" id="props">Toque un objeto para ver sus propiedades.</div>
+    <div class="pane" id="vistas"></div>
+    <div class="pane" id="anim"></div>
+  </div>
+  <div id="cv">
+    <canvas id="lienzo"></canvas>
+    <div id="bar">
+      <button id="bIso">Aislar</button><button id="bHide">Ocultar</button><button id="bShow">Mostrar todo</button>
+      <button id="bFit">Encuadrar</button><button id="bClip">Corte</button><button id="bMeas">Medir</button>
+      <button id="bUndo" title="Deshacer el último movimiento de cámara">↶ Cámara</button>
+    </div>
+    <button id="bUi" title="Mostrar/ocultar menús" aria-label="Mostrar u ocultar menús">☰</button>
+
+    <div id="clip" hidden>
+      <button data-a="x">X</button><button data-a="y">Y</button><button data-a="z">Z</button>
+      <input id="clipPos" type="range" min="0" max="1000" value="500">
+      <button id="clipFlip">Invertir</button><span id="clipVal"></span>
+    </div>
+
+    <!-- Navegación -->
+    <div id="nav">
+      <div id="modos">
+        <button data-m="orbitar" class="on" title="Un dedo gira alrededor del pivote">Orbitar</button>
+        <button data-m="panear" title="Un dedo desplaza la vista">Panear</button>
+        <button data-m="zoom" title="Un dedo acerca o aleja">Zoom</button>
+        <button data-m="caminar" title="Mirar con un dedo, moverse con la palanca">Caminar</button>
+        <button id="bFino" title="Movimiento fino por pasos">Fino</button>
+      </div>
+      <div id="fino" hidden>
+        <div class="fila"><span>Sensibilidad</span><input id="sens" type="range" min="0.1" max="2" step="0.05" value="1"><b id="sensVal">1.00×</b></div>
+        <div class="fila"><span>Giro</span>
+          <select id="pasoG"><option value="0.5">0,5°</option><option value="1">1°</option><option value="5" selected>5°</option><option value="15">15°</option><option value="45">45°</option><option value="90">90°</option></select>
+          <button data-g="izq">⟲</button><button data-g="der">⟳</button><button data-g="arr">⤒</button><button data-g="aba">⤓</button>
+        </div>
+        <div class="fila"><span>Paso</span>
+          <select id="pasoM"><option value="0.01">1 cm</option><option value="0.1">10 cm</option><option value="1" selected>1 m</option><option value="5">5 m</option><option value="25">25 m</option></select>
+          <button data-d="ade">▲</button><button data-d="atr">▼</button><button data-d="izq">◀</button><button data-d="der">▶</button><button data-d="sub">⇧</button><button data-d="baj">⇩</button>
+        </div>
+        <div class="fila"><span>Lente</span><input id="fov" type="range" min="15" max="100" step="1" value="50"><b id="fovVal">50°</b></div>
+        <div class="fila" id="filaVel"><span>Velocidad</span><input id="vel" type="range" min="0.5" max="40" step="0.5" value="4"><b id="velVal">4 m/s</b></div>
+      </div>
+    </div>
+    <div id="palanca" hidden><div id="perilla"></div></div>
+    <div id="vert" hidden><button data-v="1">⇧</button><button data-v="-1">⇩</button></div>
+
+    <div id="mlabel" hidden></div>
+    <div id="carga" hidden><div id="cargaTxt"></div><div id="cargaBar"><i></i></div></div>
+    <div id="info">NavisMobile</div>
+  </div>
+</div>
+</body>
+</html>
