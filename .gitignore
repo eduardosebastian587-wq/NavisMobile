@@ -6,3 +6,6 @@ datos_locales
 android/local.properties
 android/build
 android/capacitor-cordova-android-plugins/build
+herramientas/navismobile-export/build
+herramientas/navismobile-export/plugin/obj
+herramientas/navismobile-export/plugin/bin

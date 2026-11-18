@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bundle de Autodesk Application Plugins (%APPDATA%\Autodesk\ApplicationPlugins\NwMobileExport.bundle). -->
+<ApplicationPackage SchemaVersion="1.0" AutodeskProduct="Navisworks" Name="NwMobileExport" Description="Exportador directo Navisworks -> NavisMobile" AppVersion="0.1.0" Author="Local" ProductCode="{5D2B7C61-9A4E-4F1B-8C3D-2E6A1F0B9D47}" UpgradeCode="{A3C9E1F2-7B4D-4E8A-9F12-6C5D3B2A1E08}">
+  <CompanyDetails Name="Local" />
+  <Components>
+    <RuntimeRequirements OS="Win64" Platform="NAVMAN" SeriesMin="Nw24" SeriesMax="Nw24" />
+    <ComponentEntry AppName="NwMobileExport" Version="0.1.0" ModuleName="./Contents/2027/NwMobileExport.dll" AppDescription="Exportador NavisMobile" AppType="ManagedPlugin" LoadOnAppStartup="True" />
+  </Components>
+</ApplicationPackage>
