@@ -70,3 +70,21 @@ button:disabled{opacity:.45}
 /* Margen superior bajo la barra de estado (edge-to-edge en Android). */
 #app{box-sizing:border-box;padding-top:env(safe-area-inset-top)}
 #app.nativo{padding-top:max(env(safe-area-inset-top),30px);padding-bottom:max(env(safe-area-inset-bottom),48px)}
+
+/* Texto de estado: una sola línea, con fondo para que se lea sobre el modelo. */
+#info{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 16px);background:#1b1e24aa;padding:1px 6px;border-radius:3px}
+
+/* Horizontal en teléfono: la barra de Android va al costado, se aprovecha toda la altura y la interfaz se compacta. */
+@media (orientation:landscape) and (max-height:520px){
+  #app.nativo{padding-bottom:env(safe-area-inset-bottom)}
+  #side{width:min(250px,30vw)}
+  .tabs button{padding:6px 2px;font-size:11px}
+  .pane{font-size:12px}
+  #bar{top:4px;gap:4px;right:44px}
+  #bar button,#modos button,#fino button,#fino select{padding:4px 7px;font-size:11px}
+  #bUi{top:4px;width:32px;height:32px;font-size:15px}
+  #nav{bottom:4px;right:calc(4px + env(safe-area-inset-right))}
+  #info{bottom:4px;font-size:10px;max-width:calc(100% - 300px)}
+  #palanca{width:96px;height:96px;bottom:12px}
+  #vert{left:calc(130px + env(safe-area-inset-left));bottom:18px}
+}
