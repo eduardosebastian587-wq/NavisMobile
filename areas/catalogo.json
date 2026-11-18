@@ -105,6 +105,30 @@
         "bytes": 913032,
         "sha": "78d9692b6a10"
       }
+    },
+    {
+      "id": "area1251",
+      "nombre": "Área 1251",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-18 21:44",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1251_movil.glb",
+            "nombre": "area1251_movil.glb",
+            "bytes": 5984164,
+            "sha": "e8025d927200"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1251_elementos.json",
+        "nombre": "area1251_elementos.json",
+        "bytes": 3563682,
+        "sha": "203d4bab22ea"
+      }
     }
   ]
 }
