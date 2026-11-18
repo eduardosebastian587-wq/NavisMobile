@@ -37,11 +37,13 @@ namespace NwMobileExport
             Log.Info("Cola activa: " + DirCola);
         }
 
-        public static void Stop() { if (_timer != null) { _timer.Stop(); _timer.Dispose(); _timer = null; } }
+        public static void Stop() { if (_timer != null) { _timer.Stop(); _timer.Dispose(); _timer = null; } Postproceso.Detener(); }
 
         private static void Revisar()
         {
             if (_ocupado) return;
+            _ocupado = true;
+            try { Postproceso.Revisar(); } finally { _ocupado = false; }
             string f;
             try { f = Directory.GetFiles(DirCola, "*.trabajo.json").OrderBy(File.GetCreationTimeUtc).FirstOrDefault(); }
             catch { return; }
@@ -87,8 +89,12 @@ namespace NwMobileExport
         public override void OnUnloading() { Cola.Stop(); }
     }
 
-    /// <summary>Botón: exporta la selección actual (respeta lo oculto).</summary>
-    [Plugin("NwMobileExport.Seleccion", "NWMX", DisplayName = "NavisMobile: exportar selección", ToolTip = "Exporta la selección actual a .nmraw para NavisMobile")]
+    /// <summary>
+    /// Botón: exporta la selección actual (respeta lo oculto) a &lt;trabajo&gt;\&lt;id&gt;\&lt;id&gt;.nmraw y, al terminar,
+    /// lanza en segundo plano la conversión + publicación (actualizar_area.mjs --solo-convertir): el área queda
+    /// en el catálogo del PC (Wi-Fi) y, si config.publicar_github, en GitHub. Sin pasos manuales.
+    /// </summary>
+    [Plugin("NwMobileExport.Seleccion", "NWMX", DisplayName = "NavisMobile: exportar y publicar selección", ToolTip = "Exporta la selección y la publica en NavisMobile")]
     [AddInPlugin(AddInLocation.AddIn)]
     public class ExportSeleccion : AddInPlugin
     {
@@ -97,33 +103,157 @@ namespace NwMobileExport
             var doc = NwApp.ActiveDocument;
             if (doc == null || doc.CurrentSelection.SelectedItems.Count == 0)
             {
-                MessageBox.Show("Selecciona primero los nodos del área a exportar.", "NavisMobile Export");
+                MessageBox.Show("Selecciona primero los nodos del área a exportar (por ejemplo, el nodo \"1411\").", "NavisMobile");
                 return 0;
             }
-            string salida = parameters != null && parameters.Length > 0 ? parameters[0] : null;
-            if (salida == null)
-            {
-                using (var dlg = new SaveFileDialog { Filter = "NavisMobile raw (*.nmraw)|*.nmraw", FileName = "area.nmraw" })
-                {
-                    if (dlg.ShowDialog() != DialogResult.OK) return 0;
-                    salida = dlg.FileName;
-                }
-            }
+            var cfg = Config.Leer();
+            var items = doc.CurrentSelection.SelectedItems.ToList();
+            var nombres = items.Select(i => (i.DisplayName ?? "").Trim()).Where(n => n.Length > 0).Distinct().ToList();
+            string id = "area" + string.Join("_", nombres.Select(n => new string(n.Where(char.IsLetterOrDigit).ToArray()))).ToLowerInvariant();
+            if (id.Length > 60) id = id.Substring(0, 60);
+            string nombre = "Área " + string.Join(" + ", nombres);
+            if (MessageBox.Show(
+                    $"Exportar y publicar en NavisMobile:\n\n  {nombre}   (id {id})\n\n" +
+                    $"Destino: {(cfg.PublicarGithub ? "PC (Wi-Fi) y GitHub" : "PC (Wi-Fi)")}\n" +
+                    "Navisworks quedará ocupado mientras exporta (unos minutos según el tamaño).",
+                    "NavisMobile", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return 0;
+
+            string dir = Path.Combine(cfg.CarpetaTrabajo, id);
+            Directory.CreateDirectory(dir);
+            string salida = Path.Combine(dir, id + ".nmraw");
             var t = new Trabajo
             {
-                Raices = doc.CurrentSelection.SelectedItems.Select(i => { var p = doc.Models.CreatePathId(i); return p.ModelIndex + ":" + p.PathId; }).ToArray(),
+                Raices = items.Select(i => { var p = doc.Models.CreatePathId(i); return p.ModelIndex + ":" + p.PathId; }).ToArray(),
                 Excluir = new string[0],
                 Salida = salida,
                 Estado = salida + ".estado.json",
                 Cancelar = salida + ".cancelar",
             };
+            string r;
+            try { r = new Exportador(t).Ejecutar(); }
+            catch (Exception ex) { MessageBox.Show("Error al exportar: " + ex.Message, "NavisMobile"); return 0; }
+            if (r.StartsWith("Cancelado")) return 0;
             try
             {
-                var r = new Exportador(t).Ejecutar();
-                MessageBox.Show(r, "NavisMobile Export");
+                Postproceso.Lanzar(cfg, id, nombre, dir);
+                MessageBox.Show(r + "\n\nConvirtiendo y publicando en segundo plano; aviso cuando termine.\nRegistro: " + Path.Combine(dir, "publicar.log"), "NavisMobile");
             }
-            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message, "NavisMobile Export"); }
+            catch (Exception ex) { MessageBox.Show(r + "\n\nNo se pudo iniciar la publicación: " + ex.Message, "NavisMobile"); }
             return 0;
+        }
+    }
+
+    /// <summary>%LOCALAPPDATA%\NwMobileExport\config.json (se crea con valores por defecto la primera vez).</summary>
+    internal sealed class Config
+    {
+        public string CarpetaTrabajo = @"F:\proyecto animación\NavisMobile\trabajo";
+        public string RepoApp = @"C:\Users\Lenovo\NavisMobile_app";
+        public string Node = @"C:\Program Files\nodejs\node.exe";
+        public bool PublicarGithub = true;
+        public bool ServidorWifi = true;
+        public string Celda = "0.08";
+
+        public static Config Leer()
+        {
+            var c = new Config();
+            string f = Path.Combine(Cola.Dir, "config.json");
+            var ser = new JavaScriptSerializer();
+            try
+            {
+                if (File.Exists(f))
+                {
+                    var d = ser.Deserialize<Dictionary<string, object>>(File.ReadAllText(f, Encoding.UTF8));
+                    object v;
+                    if (d.TryGetValue("carpeta_trabajo", out v)) c.CarpetaTrabajo = (string)v;
+                    if (d.TryGetValue("repo_app", out v)) c.RepoApp = (string)v;
+                    if (d.TryGetValue("node", out v)) c.Node = (string)v;
+                    if (d.TryGetValue("publicar_github", out v)) c.PublicarGithub = (bool)v;
+                    if (d.TryGetValue("servidor_wifi", out v)) c.ServidorWifi = (bool)v;
+                    if (d.TryGetValue("celda", out v)) c.Celda = Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture);
+                    return c;
+                }
+                Directory.CreateDirectory(Cola.Dir);
+                File.WriteAllText(f, ser.Serialize(new Dictionary<string, object>
+                {
+                    { "carpeta_trabajo", c.CarpetaTrabajo }, { "repo_app", c.RepoApp }, { "node", c.Node },
+                    { "publicar_github", c.PublicarGithub }, { "servidor_wifi", c.ServidorWifi }, { "celda", c.Celda },
+                }), new UTF8Encoding(false));
+            }
+            catch (Exception ex) { Log.Error("config.json: " + ex.Message); }
+            return c;
+        }
+    }
+
+    /// <summary>
+    /// Conversión + publicación en un proceso aparte (prioridad baja, sin ventana): no bloquea Navisworks.
+    /// El temporizador de la cola avisa al terminar. También levanta el servidor Wi-Fi (servir_areas.mjs)
+    /// si no está corriendo, y lo detiene al cerrar Navisworks.
+    /// </summary>
+    internal static class Postproceso
+    {
+        private sealed class EnCurso { public System.Diagnostics.Process P; public string Nombre, Log; }
+        private static readonly List<EnCurso> Activos = new List<EnCurso>();
+        private static System.Diagnostics.Process _servidor;
+
+        public static void Lanzar(Config cfg, string id, string nombre, string dir)
+        {
+            string script = Path.Combine(cfg.RepoApp, "herramientas", "actualizar_area.mjs");
+            if (!File.Exists(script)) throw new FileNotFoundException("No existe " + script);
+            string log = Path.Combine(dir, "publicar.log");
+            string args = $"\"{script}\" --id {id} --nombre \"{nombre.Replace("\"", "")}\" --solo-convertir --celda {cfg.Celda} " +
+                          $"--trabajo \"{cfg.CarpetaTrabajo}\"" + (cfg.PublicarGithub ? " --push" : "");
+            var p = Iniciar(cfg, $"/c \"\"{cfg.Node}\" {args} > \"{log}\" 2>&1\"");
+            Activos.Add(new EnCurso { P = p, Nombre = nombre, Log = log });
+            Log.Info("Publicando " + id + " (pid " + p.Id + ")");
+            if (cfg.ServidorWifi) AsegurarServidor(cfg);
+        }
+
+        private static System.Diagnostics.Process Iniciar(Config cfg, string cmdArgs)
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", cmdArgs)
+            {
+                UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = cfg.RepoApp,
+            };
+            var p = System.Diagnostics.Process.Start(psi);
+            try { p.PriorityClass = System.Diagnostics.ProcessPriorityClass.BelowNormal; } catch { }
+            return p;
+        }
+
+        private static void AsegurarServidor(Config cfg)
+        {
+            if (_servidor != null && !_servidor.HasExited) return;
+            try
+            {
+                using (var c = new System.Net.Sockets.TcpClient())
+                    if (c.ConnectAsync("127.0.0.1", 8090).Wait(300) && c.Connected) return;   // ya hay uno corriendo
+            }
+            catch { }
+            string s = Path.Combine(cfg.RepoApp, "herramientas", "servir_areas.mjs");
+            _servidor = Iniciar(cfg, $"/c \"\"{cfg.Node}\" \"{s}\" > \"{Path.Combine(Cola.Dir, "servidor_wifi.log")}\" 2>&1\"");
+            Log.Info("Servidor Wi-Fi iniciado (pid " + _servidor.Id + ")");
+        }
+
+        /// <summary>Llamado por el temporizador de la cola (hilo de UI): avisa de las publicaciones terminadas.</summary>
+        public static void Revisar()
+        {
+            for (int i = Activos.Count - 1; i >= 0; i--)
+            {
+                var a = Activos[i];
+                if (!a.P.HasExited) continue;
+                Activos.RemoveAt(i);
+                string cola = "";
+                try { cola = string.Join("\n", File.ReadAllLines(a.Log).Reverse().Take(3).Reverse()); } catch { }
+                bool ok = a.P.ExitCode == 0;
+                Log.Info("Publicación " + a.Nombre + (ok ? " lista" : " falló: " + cola));
+                MessageBox.Show(ok ? $"{a.Nombre} publicada.\nEn el teléfono: Escenas › Recargar."
+                                   : $"Falló la publicación de {a.Nombre}:\n\n{cola}\n\nRegistro: {a.Log}",
+                    "NavisMobile", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+        }
+
+        public static void Detener()
+        {
+            try { if (_servidor != null && !_servidor.HasExited) System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("taskkill", "/T /F /PID " + _servidor.Id) { CreateNoWindow = true, UseShellExecute = false }); } catch { }
         }
     }
 
