@@ -69,7 +69,7 @@ function actualizarMarcas() {
   }
 }
 function infoTxt() {
-  $('#info').textContent = escena ? `${escena.nombre} · ${fmt(visor.triangulos)} tri · ${fps.toFixed(0)} fps · pivote ${distInfo.toFixed(1)} m` : 'NavisMobile';
+  $('#info').textContent = escena ? `${escena.nombre} · ${fmt(visor.triangulos)} tri · ${fps > 0 ? fps.toFixed(0) + ' fps' : 'en reposo'} · pivote ${distInfo.toFixed(1)} m` : 'NavisMobile';
 }
 
 // ------------------------------------------------------------------ pestañas
@@ -134,7 +134,7 @@ async function cargarBuffer(esc, buf) {
   limpiarMedida(); escena = esc;
   if (esc.id === 'local') etiquetas = {};
   const r = await visor.cargar(buf);
-  nav.fijarModelo(r.caja); nav.encuadrar(r.caja, new THREE.Vector3(1, 0.8, 1), false);
+  nav.fijarModelo(r.caja); nav.encuadrar(visor.cajaNucleo(), new THREE.Vector3(1, 0.8, 1), false);
   ajustarCorte(); pintarCapas(); pintarVistas(); pintarAnim();
   $('#props').textContent = 'Toque un objeto para ver sus propiedades.';
   $('#carga').hidden = true; infoTxt(); abrirPanel('capas');

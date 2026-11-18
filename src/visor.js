@@ -165,6 +165,19 @@ export class Visor {
   mostrar(m, v) { m.visible = v; this.pedir(); }
   mostrarTodo() { this.mallas.forEach(m => m.visible = true); this.pedir(); }
   aislar(m) { this.mallas.forEach(x => x.visible = x === m); this.pedir(); }
+  /** Caja del grupo principal de mallas: ignora las muy alejadas (líneas largas, piezas sueltas) para encuadrar bien. */
+  cajaNucleo() {
+    const cajas = this.mallas.filter(m => m.visible).map(m => this.cajaDe(m)).filter(b => !b.isEmpty());
+    if (cajas.length < 10) return this.cajaVisible();
+    const c = cajas.map(b => b.getCenter(new THREE.Vector3()));
+    const med = ['x', 'y', 'z'].map(k => c.map(v => v[k]).sort((a, b) => a - b)[c.length >> 1]);
+    const centro = new THREE.Vector3(...med);
+    const d = c.map(v => v.distanceTo(centro)), orden = [...d].sort((a, b) => a - b);
+    const corte = orden[Math.floor(orden.length * 0.85)] * 1.5 + 1;
+    const r = new THREE.Box3();
+    cajas.forEach((b, i) => { if (d[i] <= corte) r.union(b); });
+    return r.isEmpty() ? this.cajaVisible() : r;
+  }
   cajaVisible() {
     const b = new THREE.Box3();
     for (const m of this.mallas) if (m.visible) b.union(this.cajaDe(m));
