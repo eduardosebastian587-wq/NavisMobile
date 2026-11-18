@@ -3,6 +3,8 @@ on:
   push:
     branches: [main, 'claude/**']
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -21,3 +23,13 @@ jobs:
         with:
           name: NavisMobile-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk NavisMobile-debug.apk
+          gh release create "build-${{ github.run_number }}" NavisMobile-debug.apk \
+            --target "${{ github.sha }}" \
+            --title "NavisMobile build ${{ github.run_number }}" \
+            --notes "APK debug. Commit ${{ github.sha }} (rama ${{ github.ref_name }})." \
+            --latest
