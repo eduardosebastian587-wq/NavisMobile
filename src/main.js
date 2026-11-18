@@ -14,6 +14,7 @@ const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' M' : n >= 1e3 ? Math.round(
 const mb = b => (b / 1048576).toFixed(1) + ' MB';
 
 const app = $('#app'), lienzo = $('#lienzo');
+if (window.Capacitor?.isNativePlatform?.()) app.classList.add('nativo');
 const visor = new Visor(lienzo, {alSeleccion: m => alSeleccion(m)});
 const camera = visor.camera;
 

@@ -66,3 +66,7 @@ button:disabled{opacity:.45}
   #app{flex-direction:column-reverse}
   #side{border-top:1px solid #333;border-right:0;width:100%;height:38%}
 }
+
+/* Margen superior bajo la barra de estado (edge-to-edge en Android). */
+#app{box-sizing:border-box;padding-top:env(safe-area-inset-top)}
+#app.nativo{padding-top:max(env(safe-area-inset-top),30px);padding-bottom:max(env(safe-area-inset-bottom),48px)}
