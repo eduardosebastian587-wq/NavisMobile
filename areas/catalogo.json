@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "carpeta_drive": "1MMHybb61ep2gstNUdTF552_t81VwB8kw",
   "escenas": [
     {
@@ -11,47 +11,59 @@
           "id": "completo",
           "nombre": "Completo (simplificado)",
           "archivo": {
-            "ruta": "modelos/area1300_movil_v2.glb",
-            "nombre": "area1300_movil_v2.glb"
+            "ruta": "area1300_movil_v2.glb",
+            "nombre": "area1300_movil_v2.glb",
+            "bytes": 35351732,
+            "sha": "ac02e47c401c"
           }
         },
         {
           "id": "equipos",
           "nombre": "Solo equipos (ligero)",
           "archivo": {
-            "ruta": "modelos/area1300_movil.glb",
+            "ruta": "area1300_movil.glb",
             "nombre": "area1300_movil.glb",
-            "bytes": 651956
+            "bytes": 651956,
+            "sha": "5941aae5345f"
           },
           "etiquetas": {
-            "ruta": "modelos/area1300_tags.json",
-            "nombre": "area1300_tags.json"
+            "ruta": "area1300_tags.json",
+            "nombre": "area1300_tags.json",
+            "bytes": 101609,
+            "sha": "345f12f1f629"
           }
         }
       ],
       "etiquetas": {
-        "ruta": "modelos/area1300_elementos.json",
-        "nombre": "area1300_elementos.json"
+        "ruta": "area1300_elementos.json",
+        "nombre": "area1300_elementos.json",
+        "bytes": 12099782,
+        "sha": "901723716f36"
       }
     },
     {
       "id": "area1313d",
-      "nombre": "Área 1313 — exportación directa (piloto)",
+      "nombre": "Área 1313 — exportación directa",
       "descripcion": "Exportado con el plugin NwMobileExport, sin FBX. Toque un elemento para ver su TAG y propiedades SmartPlant 3D.",
       "modelos": [
         {
           "id": "completo",
           "nombre": "Completo (simplificado)",
           "archivo": {
-            "ruta": "modelos/area1313d_movil.glb",
-            "nombre": "area1313d_movil.glb"
+            "ruta": "area1313d_movil.glb",
+            "nombre": "area1313d_movil.glb",
+            "bytes": 8946056,
+            "sha": "afe2fcb828f6"
           }
         }
       ],
       "etiquetas": {
-        "ruta": "modelos/area1313d_elementos.json",
-        "nombre": "area1313d_elementos.json"
-      }
+        "ruta": "area1313d_elementos.json",
+        "nombre": "area1313d_elementos.json",
+        "bytes": 2022670,
+        "sha": "db0312b4ede2"
+      },
+      "actualizado": "2026-11-18 20:50"
     },
     {
       "id": "area1313",
@@ -62,9 +74,10 @@
           "id": "movil",
           "nombre": "Ligero (6 M)",
           "archivo": {
-            "ruta": "modelos/area1313_movil.glb",
+            "ruta": "area1313_movil.glb",
             "nombre": "area1313_movil.glb",
-            "bytes": 17371648
+            "bytes": 17371648,
+            "sha": "d756a537051f"
           }
         }
       ]

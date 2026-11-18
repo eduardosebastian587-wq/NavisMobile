@@ -89,6 +89,11 @@ async function pintarEscenas() {
   const cont = $('#escenas'); cont.textContent = '';
   let cat;
   try { cat = await datos.catalogo(); } catch (e) { cont.append(el('p', {className: 'nota', textContent: 'No se pudo leer el catálogo: ' + e.message})); return; }
+  const pc = el('input', {type: 'text', placeholder: 'IP del PC (ej. 192.168.1.20:8090)', value: datos.urlPc().replace(/^https?:\/\/|\/catalogo\.json$/g, ''),
+    style: 'flex:1;min-width:0'});
+  cont.append(el('div', {className: 'tarjeta'}, el('p', {className: 'nota', textContent: `Catálogo: ${cat.origen}`}),
+    el('div', {className: 'ops'}, pc, el('button', {textContent: 'Usar PC', onclick: () => { datos.fijarPc(pc.value); pintarEscenas(); }}),
+      el('button', {textContent: 'Recargar', onclick: () => pintarEscenas()}))));
   for (const esc of cat.escenas) {
     const tarjeta = el('div', {className: 'tarjeta'}, el('h3', {textContent: esc.nombre}), el('p', {textContent: esc.descripcion || ''}));
     for (const m of esc.modelos) {
@@ -96,7 +101,7 @@ async function pintarEscenas() {
       const est = el('div', {className: 'estado'});
       const abrir = el('button', {textContent: `Abrir ${m.nombre}`, onclick: () => abrirEscena(esc, m)});
       ops.append(abrir);
-      if (!m.archivo.ruta) {
+      if (!datos.esLocal(m.archivo)) {
         ops.append(el('button', {textContent: 'Actualizar', onclick: async () => { await abrirEscena(esc, m, true); pintarEscenas(); }}),
                    el('button', {textContent: 'Borrar descarga', onclick: async () => { await datos.borrar(m.archivo); pintarEscenas(); }}));
       }
@@ -306,6 +311,6 @@ $$('#fino [data-d]').forEach(b => b.onclick = () => {
 mostrarCaminar(false);
 
 // ------------------------------------------------------------------ arranque
-window.__nm = {visor, nav, abrirEscena, cargarBuffer};      // ayuda para pruebas
+window.__nm = {visor, nav, abrirEscena, cargarBuffer, datos, pintarEscenas};      // ayuda para pruebas
 pintarEscenas();
 requestAnimationFrame(bucle);
