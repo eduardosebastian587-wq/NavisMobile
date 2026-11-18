@@ -3,3 +3,6 @@ dist
 android/app/build
 android/.gradle
 datos_locales
+android/local.properties
+android/build
+android/capacitor-cordova-android-plugins/build
