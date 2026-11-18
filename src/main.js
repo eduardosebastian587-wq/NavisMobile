@@ -69,7 +69,7 @@ function actualizarMarcas() {
   }
 }
 function infoTxt() {
-  $('#info').textContent = escena ? `${escena.nombre} · ${fmt(visor.triangulos)} tri · ${fps > 0 ? fps.toFixed(0) + ' fps' : 'en reposo'} · pivote ${distInfo.toFixed(1)} m` : 'NavisMobile';
+  $('#info').textContent = escena ? `${escena.nombre} · ${fmt(visor.triangulos)} tri · ${fps >= 1 ? fps.toFixed(0) + ' fps' : 'en reposo'} · pivote ${distInfo.toFixed(1)} m` : 'NavisMobile';
 }
 
 // ------------------------------------------------------------------ pestañas
@@ -122,7 +122,8 @@ async function abrirEscena(esc, modelo, forzar = false) {
     progreso('Preparando…', 0, 0);
     const buf = await datos.obtener(modelo.archivo, {forzar, progreso: (a, b) => progreso(`Descargando ${modelo.archivo.nombre}`, a, b)});
     etiquetas = {};
-    if (esc.etiquetas) { try { etiquetas = await datos.obtenerJson(esc.etiquetas); } catch { /* sin etiquetas */ } }
+    const fuenteEt = modelo.etiquetas || esc.etiquetas;
+    if (fuenteEt) { try { etiquetas = await datos.obtenerJson(fuenteEt); } catch { /* sin etiquetas */ } }
     await cargarBuffer(esc, buf);
   } catch (e) {
     console.error(e); alert('No se pudo abrir la escena: ' + e.message);
@@ -133,7 +134,9 @@ async function cargarBuffer(esc, buf) {
   await new Promise(r => setTimeout(r, 30));
   limpiarMedida(); escena = esc;
   if (esc.id === 'local') etiquetas = {};
-  const r = await visor.cargar(buf);
+  const r = await visor.cargar(buf, etiquetas?.formato === 'navismobile-elementos-v1' ? etiquetas.elementos : null);
+  // los volúmenes de reserva (capa Structure) tapan la planta: se cargan ocultos y se pueden mostrar desde Capas
+  visor.mallas.forEach(m => { if (String(m.userData.grupo || '').startsWith('Volúmenes')) visor.mostrar(m, false); });
   nav.fijarModelo(r.caja); nav.encuadrar(visor.cajaNucleo(), new THREE.Vector3(1, 0.8, 1), false);
   ajustarCorte(); pintarCapas(); pintarVistas(); pintarAnim();
   $('#props').textContent = 'Toque un objeto para ver sus propiedades.';
@@ -143,7 +146,12 @@ async function cargarBuffer(esc, buf) {
 
 // ------------------------------------------------------------------ capas
 let filtro = '';
-function tagDe(m) { return m.userData.tag || m.userData.nodo || m.name.replace(/_\d+$/, ''); }
+function tagDe(m) {
+  const t = m.userData.tag;
+  if (t && !t.startsWith('Estructura')) return t;
+  return (m.isMesh && m.parent?.userData?.tag === t && m.parent.name ? m.parent.name : m.name).replace(/_\d+$/, '') || t || '';
+}
+const MAX_LISTA = 300;
 function pintarCapas() {
   const cont = $('#capas'); cont.textContent = '';
   if (!visor.mallas.length) { cont.textContent = 'Abra una escena primero.'; return; }
@@ -152,8 +160,10 @@ function pintarCapas() {
   const cuerpo = el('div'); cont.append(buscar, cuerpo);
   function lista() {
     cuerpo.textContent = '';
+    let n = 0, total = 0;
     visor.mallas.forEach(m => {
       const tag = tagDe(m); if (filtro && !tag.toLowerCase().includes(filtro)) return;
+      if (++total > MAX_LISTA) return; n++;
       const c = m.material.color || new THREE.Color(0x888888);
       const it = el('div', {className: 'item' + (visor.seleccion === m ? ' sel' : ''), onclick: () => visor.seleccionar(m)},
         el('input', {type: 'checkbox', checked: m.visible, onclick: e => e.stopPropagation(), onchange: e => visor.mostrar(m, e.target.checked)}),
@@ -161,6 +171,7 @@ function pintarCapas() {
         el('div', {className: 'gr'}, el('div', {textContent: tag}), el('small', {textContent: `${fmt(m.userData.tri)} tri`})));
       it.dataset.i = m.userData.idx; cuerpo.append(it);
     });
+    if (total > n) cuerpo.append(el('p', {className: 'nota', textContent: `Se muestran ${n} de ${total}. Escriba parte del TAG para filtrar.`}));
   }
   lista(); cont._lista = lista;
 }
@@ -185,7 +196,7 @@ function pintarProps(m) {
   const ruta = m.userData.ruta || ext.ruta; if (ruta) filas.splice(1, 0, ['Ruta', String(ruta).replace(/ \/ /g, ' › ')]);
   const b = visor.cajaDe(m), s = b.getSize(new THREE.Vector3());
   filas.push(['Triángulos', fmt(m.userData.tri)], ['Dimensiones (m)', `${s.x.toFixed(2)} × ${s.z.toFixed(2)} × ${s.y.toFixed(2)}`]);
-  if (m.userData.matOrig?.color) filas.push(['Color', '#' + m.userData.matOrig.color.getHexString()]);
+  const colorM = (m.userData.matOrig || m.material)?.color; if (colorM) filas.push(['Color', '#' + colorM.getHexString()]);
   cont.append(el('div', {className: 'cat', textContent: 'Elemento'}));
   for (const [k, v] of filas) cont.append(el('div', {className: 'row'}, el('b', {textContent: k}), el('span', {textContent: v})));
   cont.append(el('div', {className: 'ops', style: 'margin-top:8px;display:flex;gap:6px'},
@@ -228,7 +239,20 @@ const claveVistas = () => `navismobile-vistas-${escena?.id || 'x'}`;
 const leerVistas = () => { try { return JSON.parse(localStorage.getItem(claveVistas()) || '[]'); } catch { return []; } };
 function pintarVistas() {
   const c = $('#vistas'); c.textContent = '';
-  VISTAS.forEach(([k, n]) => c.append(el('div', {className: 'item', textContent: n, onclick: () => nav.vista(k, visor.cajaVisible())})));
+  VISTAS.forEach(([k, n]) => c.append(el('div', {className: 'item', textContent: n, onclick: () => nav.vista(k, visor.cajaNucleo())})));
+  // accesos por área: el prefijo de 4 dígitos del TAG (1313, 1320...)
+  const areas = {};
+  visor.mallas.forEach(m => { const a = /^(\d{4})-/.exec(m.name || '')?.[1]; if (a) (areas[a] ||= []).push(m); });
+  const claves = Object.keys(areas).sort();
+  if (claves.length > 1) {
+    c.append(el('div', {className: 'cat', textContent: 'Áreas'}));
+    const t = new THREE.Vector3();
+    claves.forEach(a => c.append(el('div', {className: 'item', onclick: () => {
+      const b = new THREE.Box3();
+      areas[a].forEach(m => { const x = visor.cajaDe(m); if (x.getSize(t).length() < 400) b.union(x); });
+      if (!b.isEmpty()) { nav.recordar(); nav.encuadrar(b); }
+    }}, el('div', {className: 'gr', textContent: `Área ${a}`}), el('small', {textContent: `${areas[a].length} elementos`}))));
+  }
   c.append(el('div', {className: 'cat', textContent: 'Mis vistas'}));
   const vs = leerVistas();
   vs.forEach((v, i) => c.append(el('div', {className: 'item'}, el('div', {className: 'gr', textContent: v.nombre, onclick: () => { nav.recordar(); nav.aplicar(v.e, true); }}),

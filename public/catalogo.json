@@ -4,19 +4,50 @@
   "escenas": [
     {
       "id": "area1300",
-      "nombre": "Área 1300 — equipos",
-      "descripcion": "218 equipos con su TAG (áreas 1313, 1320, 1323, 1325, 1332 y 1340). Sin capas MecMiscellaneous, Unknown ni Structure.",
+      "nombre": "Área 1300 — completa",
+      "descripcion": "Equipos, piping, bandejas eléctricas y muros de las áreas 1313–1345 (TOTAL_PROYECTO_2 y 4). Sin MecMiscellaneous ni Unknown; volúmenes de reserva ocultos al abrir. Toque un elemento para ver su TAG.",
       "modelos": [
-        {"id": "movil", "nombre": "Ligero (88 mil triángulos)", "archivo": {"ruta": "modelos/area1300_movil.glb", "nombre": "area1300_movil.glb", "bytes": 651956}}
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "modelos/area1300_movil_v2.glb",
+            "nombre": "area1300_movil_v2.glb"
+          }
+        },
+        {
+          "id": "equipos",
+          "nombre": "Solo equipos (ligero)",
+          "archivo": {
+            "ruta": "modelos/area1300_movil.glb",
+            "nombre": "area1300_movil.glb",
+            "bytes": 651956
+          },
+          "etiquetas": {
+            "ruta": "modelos/area1300_tags.json",
+            "nombre": "area1300_tags.json"
+          }
+        }
       ],
-      "etiquetas": {"ruta": "modelos/area1300_tags.json", "nombre": "area1300_tags.json", "bytes": 101609}
+      "etiquetas": {
+        "ruta": "modelos/area1300_elementos.json",
+        "nombre": "area1300_elementos.json"
+      }
     },
     {
       "id": "area1313",
       "nombre": "Área 1313 — molinos",
       "descripcion": "Molinos ML-1401/1402, pórtico y pescantes (sin equipos animados todavía).",
       "modelos": [
-        {"id": "movil", "nombre": "Ligero (6 M)", "archivo": {"ruta": "modelos/area1313_movil.glb", "nombre": "area1313_movil.glb", "bytes": 17371648}}
+        {
+          "id": "movil",
+          "nombre": "Ligero (6 M)",
+          "archivo": {
+            "ruta": "modelos/area1313_movil.glb",
+            "nombre": "area1313_movil.glb",
+            "bytes": 17371648
+          }
+        }
       ]
     }
   ]

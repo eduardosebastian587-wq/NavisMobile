@@ -1,14 +1,53 @@
 // Visor 3D: render bajo demanda, carga GLB (Draco), selección por GPU (sin raycast), corte y ayudantes.
+//
+// Dos formatos de modelo:
+//  - clásico: una malla por objeto seleccionable;
+//  - por elementos (fbx_a_glb_stream.py): pocas mallas grandes (una por color) y un atributo por vértice
+//    _FEATURE_ID_0 con el índice del elemento (TAG). Selección, resaltado, ocultar y aislar se resuelven en
+//    el shader, así el teléfono dibuja decenas de mallas en vez de miles.
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js';
 import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-const PROF_VS = 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
-const PROF_FS = `void main(){
-  vec4 enc=fract(gl_FragCoord.z*vec4(1.,255.,65025.,16581375.));
-  enc-=enc.yzww*vec4(1./255.,1./255.,1./255.,0.);
-  gl_FragColor=enc;}`;
+const ATTR = '_feature_id_0';          // nombre que GLTFLoader da a _FEATURE_ID_0
+const VIS_W = 1024;                    // ancho de la textura de visibilidad
+
+const PICK_VS = `
+#include <common>
+#include <clipping_planes_pars_vertex>
+#ifdef USE_FID
+attribute float ${ATTR};
+flat varying float vFid;
+#endif
+void main() {
+  #include <begin_vertex>
+  #include <project_vertex>
+  #include <clipping_planes_vertex>
+  #ifdef USE_FID
+  vFid = floor(${ATTR} + 0.5);
+  #endif
+}`;
+const PICK_FS = `
+#include <clipping_planes_pars_fragment>
+#ifdef USE_FID
+uniform sampler2D uVis; uniform float uVisW;
+flat varying float vFid;
+#endif
+void main() {
+  #include <clipping_planes_fragment>
+  #ifdef USE_FID
+  if (texelFetch(uVis, ivec2(int(mod(vFid, uVisW)), int(floor(vFid / uVisW))), 0).r < 0.5) discard;
+  #endif
+  #ifdef MODO_ID
+  float id = vFid + 1.0;
+  gl_FragColor = vec4(mod(id, 256.0), mod(floor(id / 256.0), 256.0), floor(id / 65536.0), 255.0) / 255.0;
+  #else
+  vec4 enc = fract(gl_FragCoord.z * vec4(1.0, 255.0, 65025.0, 16581375.0));
+  enc -= enc.yzww * vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
+  gl_FragColor = enc;
+  #endif
+}`;
 
 export class Visor {
   constructor(lienzo, o = {}) {
@@ -29,7 +68,9 @@ export class Visor {
 
     this.raiz = new THREE.Group(); this.scene.add(this.raiz);
     this.ayudas = new THREE.Group(); this.scene.add(this.ayudas);
-    this.mallas = [];                                   // todas las mallas del modelo
+    this.mallas = [];          // objetos seleccionables (mallas, o elementos en el formato por elementos)
+    this.geo = [];             // mallas reales de la escena
+    this.porElementos = false;
     this.seleccion = null;
     this.caja = new THREE.Box3(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(50, 50, 50));
     this.plano = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
@@ -38,8 +79,14 @@ export class Visor {
     this.dracoLoader = new DRACOLoader().setDecoderPath(import.meta.env.BASE_URL + 'draco/');
     this.loader = new GLTFLoader().setDRACOLoader(this.dracoLoader);
 
+    // uniformes compartidos por todos los materiales del formato por elementos
+    this.U = {uVis: {value: null}, uVisW: {value: VIS_W}, uSel: {value: -1}};
     this.rtPick = new THREE.WebGLRenderTarget(1, 1, {type: THREE.UnsignedByteType, format: THREE.RGBAFormat});
-    this.matProf = new THREE.ShaderMaterial({vertexShader: PROF_VS, fragmentShader: PROF_FS, clipping: true, side: THREE.DoubleSide});
+    const pick = defines => new THREE.ShaderMaterial({vertexShader: PICK_VS, fragmentShader: PICK_FS, clipping: true,
+      side: THREE.DoubleSide, defines, uniforms: {uVis: this.U.uVis, uVisW: this.U.uVisW}});
+    this.matProf = pick({});
+    this.matProfFid = pick({USE_FID: ''});
+    this.matIdFid = pick({USE_FID: '', MODO_ID: ''});
     this._sucio = true; this._interactuando = false;
     this._ro = new ResizeObserver(() => this.ajustar());
     this._ro.observe(lienzo.parentElement);
@@ -69,40 +116,77 @@ export class Visor {
   limpiar() {
     this.deseleccionar();
     this.raiz.clear();
-    for (const m of this.mallas) { m.geometry.dispose(); [].concat(m.material).forEach(x => x.dispose()); }
-    this.mallas = []; this.triangulos = 0; this.cortar(null);
+    for (const m of this.geo) { m.geometry.dispose(); [].concat(m.material).forEach(x => x.dispose()); }
+    this.mallas = []; this.geo = []; this.triangulos = 0; this.porElementos = false; this.cortar(null);
+    this.U.uVis.value?.dispose(); this.U.uVis.value = null; this.U.uSel.value = -1;
     this.limpiarAyudas();
   }
-  async cargar(buffer) {
+  /** elementos: lista del JSON navismobile-elementos-v1 (formato por elementos) o null. */
+  async cargar(buffer, elementos = null) {
     this.limpiar();
     const gltf = await new Promise((ok, mal) => this.loader.parse(buffer, '', ok, mal));
     this.raiz.add(gltf.scene);
     gltf.scene.updateMatrixWorld(true);
     gltf.scene.traverse(n => {
       if (!n.isMesh) return;
-      // GLTFLoader deja los extras (tag, ruta, propiedades) en el nodo padre cuando la malla tiene varias primitivas
       for (let p = n.parent; p && p !== gltf.scene; p = p.parent) {
         for (const k in p.userData) if (!(k in n.userData)) n.userData[k] = p.userData[k];
         if (!n.userData.tag && p.name) n.userData.nodo = p.name;
       }
-      n.userData.idx = this.mallas.length; this.mallas.push(n);
       const g = n.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3;
       n.userData.tri = tri; this.triangulos += tri;
       if (!g.boundingBox) g.computeBoundingBox();
       n.matrixAutoUpdate = false; n.frustumCulled = true;
+      this.geo.push(n);
     });
+    this.porElementos = !!elementos && this.geo.length > 0 && this.geo.every(m => m.geometry.attributes[ATTR]);
+    if (this.porElementos) this._prepararElementos(elementos);
+    else this.geo.forEach((m, i) => { m.userData.idx = i; this.mallas.push(m); });
     this.caja = new THREE.Box3().setFromObject(this.raiz);
     if (this.caja.isEmpty()) this.caja.set(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(50, 50, 50));
     this.pedir();
     return {mallas: this.mallas, caja: this.caja, triangulos: this.triangulos};
   }
+  _prepararElementos(elementos) {
+    const n = elementos.length, H = Math.max(1, Math.ceil(n / VIS_W));
+    const tex = new THREE.DataTexture(new Uint8Array(VIS_W * H).fill(255), VIS_W, H, THREE.RedFormat, THREE.UnsignedByteType);
+    tex.needsUpdate = true; this.U.uVis.value = tex;
+    this.mallas = elementos.map((e, i) => {
+      const {min, max, ...datos} = e;
+      return {fid: i, name: e.tag, visible: true, material: {color: null},
+              caja: new THREE.Box3(new THREE.Vector3(...min), new THREE.Vector3(...max)),
+              userData: {...datos, idx: i, tri: e.tri || 0}};
+    });
+    for (const m of this.geo) {          // color de muestra de cada elemento y shader con identificador
+      const f = m.geometry.attributes[ATTR].array, c = m.material.color;
+      for (let i = 0; i < f.length; i += 7) { const it = this.mallas[Math.round(f[i])]; if (it && !it.material.color) it.material.color = c; }
+      this._inyectar(m.material);
+    }
+    for (const it of this.mallas) it.material.color ||= new THREE.Color(0x888888);
+  }
+  _inyectar(mat) {
+    const U = this.U;
+    mat.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, U);
+      sh.vertexShader = `attribute float ${ATTR};\nflat varying float vFid;\n` +
+        sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\nvFid = floor(${ATTR} + 0.5);`);
+      sh.fragmentShader = 'uniform sampler2D uVis; uniform float uVisW; uniform float uSel;\nflat varying float vFid;\n' +
+        sh.fragmentShader
+          .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n' +
+            'if (texelFetch(uVis, ivec2(int(mod(vFid, uVisW)), int(floor(vFid / uVisW))), 0).r < 0.5) discard;')
+          .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' +
+            'if (abs(vFid - uSel) < 0.5) totalEmissiveRadiance += vec3(0.16, 0.43, 0.69);');
+    };
+    mat.customProgramCacheKey = () => 'navismobile-fid';
+    mat.needsUpdate = true;
+  }
+  _vis(fid, v) { const t = this.U.uVis.value; t.image.data[fid] = v ? 255 : 0; t.needsUpdate = true; }
 
   // ------------------------------------------------------------ selección por GPU
   _leer(x, y, pasada) {
     const r = this.renderer, c = this.camera, W = this.lienzo.clientWidth, H = this.lienzo.clientHeight;
-    const pr = r.getPixelRatio();
     c.setViewOffset(W, H, x, y, 1, 1);
-    const antes = {cs: r.outputColorSpace, tm: r.toneMapping, fondo: this.scene.background, env: this.scene.environment};
+    const antes = {cs: r.outputColorSpace, tm: r.toneMapping};
     r.outputColorSpace = THREE.LinearSRGBColorSpace; r.toneMapping = THREE.NoToneMapping;
     const lay = c.layers.mask; c.layers.set(0);
     const col = r.getClearColor(new THREE.Color()), alfa = r.getClearAlpha();
@@ -115,25 +199,31 @@ export class Visor {
     r.setClearColor(col, alfa);
     c.layers.mask = lay; c.clearViewOffset();
     r.outputColorSpace = antes.cs; r.toneMapping = antes.tm;
-    this._sucio = true; void pr;
+    this._sucio = true;
     return buf;
+  }
+  _conMaterial(mat) {
+    this.scene.overrideMaterial = mat;
+    this.renderer.clear(); this.renderer.render(this.scene, this.camera);
+    this.scene.overrideMaterial = null;
   }
   /** Punto del mundo bajo el píxel (x, y), o null si no hay geometría. */
   puntoEn(x, y) {
-    if (!this.mallas.length) return null;
-    const b = this._leer(x, y, () => {
-      this.scene.overrideMaterial = this.matProf;
-      this.renderer.clear(); this.renderer.render(this.scene, this.camera);
-      this.scene.overrideMaterial = null;
-    });
+    if (!this.geo.length) return null;
+    const b = this._leer(x, y, () => this._conMaterial(this.porElementos ? this.matProfFid : this.matProf));
     const z = (b[0] + b[1] / 255 + b[2] / 65025 + b[3] / 16581375) / 255;
     if (z >= 0.99999) return null;
     const W = this.lienzo.clientWidth, H = this.lienzo.clientHeight;
     return new THREE.Vector3(x / W * 2 - 1, -(y / H) * 2 + 1, z * 2 - 1).unproject(this.camera);
   }
-  /** Malla bajo el píxel (x, y), o null. */
+  /** Objeto seleccionable bajo el píxel (x, y), o null. */
   mallaEn(x, y) {
-    if (!this.mallas.length) return null;
+    if (!this.geo.length) return null;
+    if (this.porElementos) {
+      const b = this._leer(x, y, () => this._conMaterial(this.matIdFid));
+      const i = b[0] + (b[1] << 8) + (b[2] << 16);
+      return i > 0 && i <= this.mallas.length && !(b[0] === 255 && b[1] === 255 && b[2] === 255) ? this.mallas[i - 1] : null;
+    }
     const orig = new Map(), mats = [];
     this.mallas.forEach((m, i) => {
       const c = new THREE.Color(); c.setRGB(((i + 1) & 255) / 255, (((i + 1) >> 8) & 255) / 255, (((i + 1) >> 16) & 255) / 255, THREE.LinearSRGBColorSpace);
@@ -151,21 +241,34 @@ export class Visor {
   seleccionar(m) {
     this.deseleccionar();
     if (!m) { this.o.alSeleccion?.(null); return; }
-    this.seleccion = m; m.userData.matOrig = m.material;
-    const r = m.material.clone(); r.emissive = new THREE.Color(0x2a6fb0); r.emissiveIntensity = 0.9;
-    m.material = r;
+    this.seleccion = m;
+    if (this.porElementos) this.U.uSel.value = m.fid;
+    else {
+      m.userData.matOrig = m.material;
+      const r = m.material.clone(); r.emissive = new THREE.Color(0x2a6fb0); r.emissiveIntensity = 0.9;
+      m.material = r;
+    }
     this.o.alSeleccion?.(m); this.pedir();
   }
   deseleccionar() {
     const m = this.seleccion; if (!m) return;
-    m.material.dispose(); m.material = m.userData.matOrig; delete m.userData.matOrig;
+    if (this.porElementos) this.U.uSel.value = -1;
+    else { m.material.dispose(); m.material = m.userData.matOrig; delete m.userData.matOrig; }
     this.seleccion = null; this.pedir();
   }
-  cajaDe(m) { return new THREE.Box3().setFromObject(m); }
-  mostrar(m, v) { m.visible = v; this.pedir(); }
-  mostrarTodo() { this.mallas.forEach(m => m.visible = true); this.pedir(); }
-  aislar(m) { this.mallas.forEach(x => x.visible = x === m); this.pedir(); }
-  /** Caja del grupo principal de mallas: ignora las muy alejadas (líneas largas, piezas sueltas) para encuadrar bien. */
+  cajaDe(m) { return m.caja ? m.caja.clone() : new THREE.Box3().setFromObject(m); }
+  mostrar(m, v) { m.visible = v; if (this.porElementos) this._vis(m.fid, v); this.pedir(); }
+  mostrarTodo() {
+    this.mallas.forEach(m => m.visible = true);
+    if (this.porElementos) { const t = this.U.uVis.value; t.image.data.fill(255); t.needsUpdate = true; }
+    this.pedir();
+  }
+  aislar(m) {
+    this.mallas.forEach(x => x.visible = x === m);
+    if (this.porElementos) { const t = this.U.uVis.value; t.image.data.fill(0); t.image.data[m.fid] = 255; t.needsUpdate = true; }
+    this.pedir();
+  }
+  /** Caja del grupo principal de objetos: ignora los muy alejados (líneas largas, piezas sueltas) para encuadrar bien. */
   cajaNucleo() {
     const cajas = this.mallas.filter(m => m.visible).map(m => this.cajaDe(m)).filter(b => !b.isEmpty());
     if (cajas.length < 10) return this.cajaVisible();
@@ -173,9 +276,10 @@ export class Visor {
     const med = ['x', 'y', 'z'].map(k => c.map(v => v[k]).sort((a, b) => a - b)[c.length >> 1]);
     const centro = new THREE.Vector3(...med);
     const d = c.map(v => v.distanceTo(centro)), orden = [...d].sort((a, b) => a - b);
-    const corte = orden[Math.floor(orden.length * 0.85)] * 1.5 + 1;
+    const corte = orden[Math.floor(orden.length * 0.5)] * 2 + 50;
     const r = new THREE.Box3();
-    cajas.forEach((b, i) => { if (d[i] <= corte) r.union(b); });
+    const v = new THREE.Vector3();
+    cajas.forEach((b, i) => { if (d[i] <= corte && b.getSize(v).length() <= corte * 2 + 50) r.union(b); });
     return r.isEmpty() ? this.cajaVisible() : r;
   }
   cajaVisible() {
