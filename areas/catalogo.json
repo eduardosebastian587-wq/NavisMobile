@@ -177,6 +177,30 @@
         "bytes": 6699968,
         "sha": "652504213236"
       }
+    },
+    {
+      "id": "area1300nube60",
+      "nombre": "Área 1300 — completa (nube, ratio 0,6)",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 16:53",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1300nube60_movil.glb",
+            "nombre": "area1300nube60_movil.glb",
+            "bytes": 17782132,
+            "sha": "053cc9339286"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1300nube60_elementos.json",
+        "nombre": "area1300nube60_elementos.json",
+        "bytes": 6699968,
+        "sha": "652504213236"
+      }
     }
   ]
 }
