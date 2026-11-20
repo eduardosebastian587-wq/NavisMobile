@@ -1,0 +1,152 @@
+# Convierte y publica un área en la nube, sin usar el PC.
+# Entrada: un .nmraw (plugin NwMobileExport, con su .piezas.json al lado) o un .fbx exportado de Navisworks,
+# subido a la carpeta de Google Drive compartida por enlace (por defecto «proyecto animación»).
+# Salida: areas/<id>_movil.glb + areas/<id>_elementos.json + entrada en areas/catalogo.json (commit en esta rama).
+# Se lanza desde el celular: GitHub › NavisMobile › Actions › «Procesar área» › Run workflow.
+name: Procesar área
+
+on:
+  workflow_dispatch:
+    inputs:
+      archivo:
+        description: 'Archivo en Drive: nombre (area1313.nmraw, hito.fbx) o enlace de Drive'
+        required: true
+      id:
+        description: 'Id del área en la app (letras, números, - y _), p. ej. area1313'
+        required: true
+      nombre:
+        description: 'Nombre visible en la app (vacío = el id)'
+        required: false
+        default: ''
+      carpeta:
+        description: 'Id de la carpeta de Drive donde buscar (por defecto «proyecto animación»)'
+        required: false
+        default: '1MMHybb61ep2gstNUdTF552_t81VwB8kw'
+      celda:
+        description: 'Simplificación: celda máxima en metros (más grande = más liviano)'
+        required: false
+        default: '0.08'
+      ratio:
+        description: 'Fracción de triángulos que conserva la optimización final (0.25 = 25 %)'
+        required: false
+        default: '0.25'
+      publicar:
+        description: 'Publicar en el catálogo de la app (si no, solo deja el resultado para descargar)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: procesar-area
+  cancel-in-progress: false
+
+jobs:
+  procesar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ARCHIVO: ${{ inputs.archivo }}
+      AREA_ID: ${{ inputs.id }}
+      AREA_NOMBRE: ${{ inputs.nombre }}
+      CARPETA: ${{ inputs.carpeta }}
+      CELDA: ${{ inputs.celda }}
+      RATIO: ${{ inputs.ratio }}
+      PUBLICAR: ${{ inputs.publicar }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dependencias
+        run: |
+          npm ci --no-audit --no-fund
+          python -m pip install --quiet numpy
+
+      - name: Revisar parámetros
+        run: |
+          echo "TRABAJO=$RUNNER_TEMP/trabajo" >> "$GITHUB_ENV"
+          TRABAJO="$RUNNER_TEMP/trabajo"
+          [[ "$AREA_ID" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "::error::id inválido: $AREA_ID"; exit 1; }
+          [[ "$CELDA" =~ ^[0-9.]+$ && "$RATIO" =~ ^[0-9.]+$ ]] || { echo "::error::celda/ratio deben ser números"; exit 1; }
+          mkdir -p "$TRABAJO"
+
+      - name: Descargar de Google Drive
+        id: descarga
+        run: |
+          case "${ARCHIVO,,}" in
+            *.nmraw) TIPO=nmraw; EXTRA=(--tambien .piezas.json) ;;
+            *.fbx)   TIPO=fbx;   EXTRA=() ;;
+            *drive.google.com*|*usercontent*) TIPO=fbx; EXTRA=(--nombre "$AREA_ID.fbx"); echo "::notice::Enlace directo: se trata como FBX" ;;
+            *) echo "::error::El archivo debe terminar en .nmraw o .fbx (o ser un enlace de Drive a un FBX)"; exit 1 ;;
+          esac
+          RUTA=$(node herramientas/drive_descargar.mjs --archivo "$ARCHIVO" --carpeta "$CARPETA" --destino "$TRABAJO/" "${EXTRA[@]}")
+          echo "tipo=$TIPO" >> "$GITHUB_OUTPUT"
+          echo "ruta=$RUTA" >> "$GITHUB_OUTPUT"
+          ls -la "$TRABAJO"
+
+      - name: Convertir a GLB
+        env:
+          TIPO: ${{ steps.descarga.outputs.tipo }}
+          RUTA: ${{ steps.descarga.outputs.ruta }}
+        run: |
+          if [ "$TIPO" = nmraw ]; then
+            python herramientas/navismobile-export/herramientas/raw_a_glb.py "$RUTA" "$TRABAJO/completo.glb" "$TRABAJO/elementos.json" \
+              --celda "$CELDA" --div 3 --min 0.06 --margen 15
+          else
+            python herramientas/fbx_a_glb_stream.py "$RUTA" "$TRABAJO/completo.glb" "$TRABAJO/elementos.json" \
+              --celda "$CELDA" --div 3 --min 0.06
+          fi
+          rm -f "$RUTA" "$RUTA.piezas.json" "$TRABAJO"/*.pkl
+
+      - name: Optimizar para el teléfono (simplificación + Draco)
+        env:
+          NODE_OPTIONS: --max-old-space-size=12000
+        run: |
+          node herramientas/navismobile-export/herramientas/optimizar.cjs "$TRABAJO/completo.glb" "$TRABAJO/movil.glb" \
+            --ratio "$RATIO" --modulos "$GITHUB_WORKSPACE/node_modules"
+          rm -f "$TRABAJO/completo.glb"
+
+      - name: Validar GLB
+        run: |
+          node -e "
+            const v = require('gltf-validator'), fs = require('fs');
+            const f = process.argv[1], b = fs.readFileSync(f);
+            v.validateBytes(new Uint8Array(b), {maxIssues: 50}).then(r => {
+              console.log('GLB', (b.length / 1e6).toFixed(1), 'MB · errores', r.issues.numErrors, '· avisos', r.issues.numWarnings);
+              if (b.length > 95e6) { console.error('::error::El GLB supera 95 MB (límite de GitHub 100 MB): suba celda o baje ratio'); process.exit(1); }
+              if (r.issues.numErrors) { console.error(JSON.stringify(r.issues.messages.slice(0, 10), null, 1)); process.exit(1); }
+            });" "$TRABAJO/movil.glb"
+
+      - name: Guardar resultado (descargable 7 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.id }}
+          path: |
+            ${{ runner.temp }}/trabajo/movil.glb
+            ${{ runner.temp }}/trabajo/elementos.json
+          retention-days: 7
+
+      - name: Publicar en el catálogo de la app
+        if: ${{ inputs.publicar }}
+        run: |
+          node herramientas/publicar_area.mjs --id "$AREA_ID" --nombre "${AREA_NOMBRE:-$AREA_ID}" \
+            --glb "$TRABAJO/movil.glb" --elementos "$TRABAJO/elementos.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add areas/catalogo.json "areas/${AREA_ID}_movil.glb" "areas/${AREA_ID}_elementos.json"
+          git commit -q -m "Área ${AREA_ID}: ${AREA_NOMBRE:-$AREA_ID} (procesada en la nube desde ${ARCHIVO##*/})"
+          for i in 1 2 3 4; do
+            git push -q origin "HEAD:${GITHUB_REF_NAME}" && break
+            echo "Reintento $i: integro cambios remotos"; git pull -q --rebase origin "${GITHUB_REF_NAME}"; sleep $((i * 5))
+          done
+          echo "### Área \`${AREA_ID}\` publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo "En la app: **Escenas › Recargar** (GitHub puede tardar ~5 min en servir el archivo nuevo)." >> "$GITHUB_STEP_SUMMARY"
