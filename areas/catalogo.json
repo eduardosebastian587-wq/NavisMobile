@@ -129,6 +129,30 @@
         "bytes": 3563682,
         "sha": "203d4bab22ea"
       }
+    },
+    {
+      "id": "hitom331",
+      "nombre": "Hito M33-1 — correas y domo",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 02:23",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "hitom331_movil.glb",
+            "nombre": "hitom331_movil.glb",
+            "bytes": 10258212,
+            "sha": "9a5204dfa0c3"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "hitom331_elementos.json",
+        "nombre": "hitom331_elementos.json",
+        "bytes": 4126279,
+        "sha": "5314ae752537"
+      }
     }
   ]
 }
