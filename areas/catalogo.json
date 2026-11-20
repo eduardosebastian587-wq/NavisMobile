@@ -153,6 +153,30 @@
         "bytes": 2939177,
         "sha": "af60fc255b95"
       }
+    },
+    {
+      "id": "area1251nube",
+      "nombre": "Área 1251 — completa (procesada en la nube)",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 14:39",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1251nube_movil.glb",
+            "nombre": "area1251nube_movil.glb",
+            "bytes": 7609248,
+            "sha": "05adf8689884"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1251nube_elementos.json",
+        "nombre": "area1251nube_elementos.json",
+        "bytes": 4421433,
+        "sha": "9900592fc840"
+      }
     }
   ]
 }
