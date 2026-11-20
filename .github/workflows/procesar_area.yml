@@ -6,9 +6,6 @@
 name: Procesar área
 
 on:
-  push:   # PRUEBA TEMPORAL: procesa hito.fbx al subir la rama
-    branches: [nube-procesar-area]
-    paths: ['.github/workflows/procesar_area.yml']
   workflow_dispatch:
     inputs:
       archivo:
@@ -50,12 +47,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
-      ARCHIVO: ${{ inputs.archivo || 'hito.fbx' }}
-      AREA_ID: ${{ inputs.id || 'hitom331' }}
-      AREA_NOMBRE: ${{ inputs.nombre || 'Hito M33-1 — correas y domo' }}
-      CARPETA: ${{ inputs.carpeta || '1MMHybb61ep2gstNUdTF552_t81VwB8kw' }}
-      CELDA: ${{ inputs.celda || '0.08' }}
-      RATIO: ${{ inputs.ratio || '0.25' }}
+      ARCHIVO: ${{ inputs.archivo }}
+      AREA_ID: ${{ inputs.id }}
+      AREA_NOMBRE: ${{ inputs.nombre }}
+      CARPETA: ${{ inputs.carpeta }}
+      CELDA: ${{ inputs.celda }}
+      RATIO: ${{ inputs.ratio }}
       PUBLICAR: ${{ inputs.publicar }}
     steps:
       - uses: actions/checkout@v4
@@ -132,14 +129,14 @@ jobs:
       - name: Guardar resultado (descargable 7 días)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.id || 'hitom331' }}
+          name: ${{ inputs.id }}
           path: |
             ${{ runner.temp }}/trabajo/movil.glb
             ${{ runner.temp }}/trabajo/elementos.json
           retention-days: 7
 
       - name: Publicar en el catálogo de la app
-        if: ${{ inputs.publicar || github.event_name == 'push' }}
+        if: ${{ inputs.publicar }}
         run: |
           node herramientas/publicar_area.mjs --id "$AREA_ID" --nombre "${AREA_NOMBRE:-$AREA_ID}" \
             --glb "$TRABAJO/movil.glb" --elementos "$TRABAJO/elementos.json"
