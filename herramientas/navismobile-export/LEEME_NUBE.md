@@ -22,7 +22,7 @@ Ahora la cadena se parte en dos:
    ```
    powershell -ExecutionPolicy Bypass -File herramientas\navismobile-export\extraer_area_oculto.ps1 -Nwd "F:\proyecto animación\AREA_1313_MOLINOS\modelo_fuente\area 1313.nwd" -Id area1313 -Prueba
    ```
-   - Debe terminar con `LISTO:` y dejar `area1313.nmraw` en `%LOCALAPPDATA%\NwMobileExport\lote\area1313`.
+   - Debe terminar con `LISTO:` y dejar `area1313.nmraw` en `%USERPROFILE%\NwMobileExport\lote\area1313` (fuera de AppData: desde Cowork, Windows virtualiza AppData y el Navisworks oculto no vería la carpeta).
    - Mientras corre, tu Navisworks normal y el resto del PC siguen disponibles.
 3. Si funciona, repite **sin** `-Prueba`: copia el resultado a Drive.
 4. **Si falla con «no ejecutó NwMobileExport.Lote»** (el plugin no carga en modo oculto): usa el plan B,

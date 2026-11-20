@@ -40,6 +40,9 @@ namespace NwMobileExport
                 return 1;
             }
             string estado = salida + ".estado.json";
+            // La carpeta la crea quien lanza Navisworks, pero desde una app empaquetada (MSIX) Windows la virtualiza
+            // y esta instancia no la ve: se crea aquí antes de escribir nada (si no, el registro y los errores se pierden).
+            try { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(salida))); } catch { }
             // Registro propio junto al .nmraw: en la instancia oculta export.log no siempre recibe las líneas.
             Action<string> anotar = m =>
             {

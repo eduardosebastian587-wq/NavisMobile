@@ -66,7 +66,9 @@ try {
   New-Item -ItemType Directory -Force -Path $Destino | Out-Null
 
   # Se trabaja en disco local y se copia a Drive al final (la sincronización no compite con la extracción).
-  $local = Join-Path $env:LOCALAPPDATA "NwMobileExport\lote\$Id"
+  # Fuera de AppData: si este script corre desde una app empaquetada (Cowork/Claude), Windows virtualiza AppData
+  # y el Navisworks oculto no vería la carpeta.
+  $local = Join-Path $env:USERPROFILE "NwMobileExport\lote\$Id"
   New-Item -ItemType Directory -Force -Path $local | Out-Null
   Get-ChildItem -LiteralPath $local -File -ErrorAction SilentlyContinue | Remove-Item -Force
   $salida = if ($Formato -eq 'fbx') { Join-Path $local "$Id.fbx" } else { Join-Path $local "$Id.nmraw" }
@@ -114,6 +116,7 @@ try {
       if ($ExcluirNombres) { $args2 += "excluir_nombres=$ExcluirNombres" }
       try { $r = $app.ExecuteAddInPlugin($PLUGIN_LOTE, [string[]]$args2) }
       catch { throw "Navisworks no ejecutó $PLUGIN_LOTE ($($_.Exception.Message)). Si el plugin no carga en modo oculto, usa -Formato fbx (plan B)." }
+      Etapa "el plugin devolvió $r (0 = correcto)"
     }
   } finally {
     Etapa 'cerrando Navisworks oculto'
@@ -126,6 +129,10 @@ try {
     if (Test-Path $estado) {
       $e = Get-Content $estado -Raw -Encoding UTF8 | ConvertFrom-Json
       if ($e.estado -ne 'listo') { throw "El plugin terminó con estado '$($e.estado)': $($e.error)" }
+    }
+    if (-not (Test-Path "$salida.piezas.json")) {
+      $reg = if (Test-Path "$salida.log") { (Get-Content "$salida.log" -Raw -Encoding UTF8).Trim() } else { '(sin registro)' }
+      throw "No se generó $salida (el plugin devolvió $r). Registro del plugin: $reg"
     }
     foreach ($f in @($salida, "$salida.piezas.json")) { if (-not (Test-Path $f)) { throw "No se generó $f" } }
   } else {
