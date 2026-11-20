@@ -39,20 +39,19 @@ gh api -X POST repos/eduardosebastian587-wq/navismobile/actions/workflows/proces
 | `area1251nube` | Área 1251 — completa (nube) | nube, desde `area1251.nmraw` (extracción oculta); reemplazó a `area1251` |
 | `area1411nube` | Área 1411 — completa (nube) | nube, desde `area1411.nmraw` (extracción oculta); reemplazó a `area1411` |
 
-## 3. En curso: área 1300
-- **Lo que hará Cowork** con `PROMPT_COWORK_v5.md` (en `herramientas/navismobile-export/`):
-  ```
-  extraer_area_oculto.ps1 -Nwd "F:\proyecto animación\MODELO_FLUOR_RAPIDO_2026-08-30.nwd" -Id area1300 `
-    -Rutas "TOTAL_PROYECTO_2.vue/AMSA_DMC/1300|TOTAL_PROYECTO_4.vue/AMSA_DMC/1300" -ExcluirNombres "MecMiscellaneous,Unknown"
-  ```
-- **Primer intento (v4):** falló en 7 s sin dejar archivos.
-  - Causa probable: Cowork corre desde una app empaquetada (MSIX) y Windows virtualiza `AppData`, así que la carpeta `lote\<id>` no existía para el Navisworks oculto.
-  - Corregido en 7f1a8e3: carpeta en `%USERPROFILE%\NwMobileExport\lote\<id>`, el plugin la crea, el script informa el código devuelto y el registro.
-  - **No confirmado** hasta el informe de Cowork.
-- **Cuando llegue el informe:**
-  1. Lanzar «Procesar área» con `archivo=area1300.nmraw`, `id=area1300nube`.
-  2. Comparar con `area1300` y **preguntar al usuario antes de reemplazar**: la antigua tiene además el modelo liviano «Solo equipos» y `area1300_tags.json`, que el flujo nuevo no genera. Una opción es añadir `area1300nube` como modelo `completo` dentro de la escena `area1300` y conservar `equipos`.
-- **Si vuelve a fallar con «Ruta …: no existe "X". Disponibles: …»:** ajustar el nombre. Los nombres se sacaron de las rutas en `areas/area1300_elementos.json`, donde los primeros tramos son `TOTAL_PROYECTO_2.vue / AMSA_DMC / 1300` y `TOTAL_PROYECTO_4.vue / AMSA_DMC / 1300`.
+## 3. Área 1300 — extracción hecha, versiones de la nube publicadas (2026-11-20)
+- Extracción oculta OK (commit 7f1a8e3 confirmado): 12,8 min, 196 659 piezas, 106 864 276 triángulos, 7 968 TAG, `area1300.nmraw` 3 848 687 240 bytes, ya completo en Drive. Las rutas necesitan el nodo raíz del NWD: `MODELO_FLUOR_RAPIDO_2026-08-30.nwd/TOTAL_PROYECTO_2.vue/AMSA_DMC/1300|MODELO_FLUOR_RAPIDO_2026-08-30.nwd/TOTAL_PROYECTO_4.vue/AMSA_DMC/1300` (con `-ExcluirNombres "MecMiscellaneous,Unknown"`).
+- «Procesar área» tarda ~3 min con este archivo. Versiones publicadas en `main` (triángulos medidos con gltf-transform + draco3dgltf):
+
+| id | celda | ratio | triángulos | GLB | elementos |
+|---|---|---|---|---|---|
+| `area1300` (antigua, `_movil_v2.glb`) | — | — | 12 464 388 | 35,4 MB | 10 583 |
+| `area1300nube` | 0,08 | 0,25 | 4 245 432 | 16,8 MB | 7 699 |
+| `area1300nube60` | 0,08 | 0,6 | 4 496 980 | 17,8 MB | 7 699 |
+| `area1300nube04` | 0,04 | 0,6 | 7 045 003 | 27,0 MB | 7 714 |
+
+- Hallazgos: `celda` es el parámetro que más pesa (en `raw_a_glb.py` la celda efectiva por pieza es `min(celda, 2.ª dimensión/3)`); `ratio` casi no cambia nada. El filtro `--min 0.06` (fijo en `procesar_area.yml`) descarta 2 997 piezas pequeñas, por eso los elementos no suben. El workflow aborta si el GLB supera 95 MB.
+- **Decisión pendiente del usuario:** la antigua sigue ganando en detalle. Opciones: relanzar con `celda` 0,02 (GLB estimado 40–50 MB), bajar `--min`, o dejar la antigua y borrar `area1300nube`/`nube60`/`nube04`. La antigua tiene además «Solo equipos» y `area1300_tags.json`. No se ha reemplazado ni borrado nada.
 
 ## 4. Datos y rutas útiles
 - **Drive «proyecto animación»** (compartida por enlace; descarga sin login: `https://drive.usercontent.google.com/download?id=<ID>&export=download&confirm=t`, funciona incluso con archivos en la papelera):
