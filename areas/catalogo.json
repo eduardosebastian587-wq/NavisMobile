@@ -201,6 +201,30 @@
         "bytes": 6699968,
         "sha": "652504213236"
       }
+    },
+    {
+      "id": "area1300nube04",
+      "nombre": "Área 1300 — completa (nube, celda 0,04)",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 16:58",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1300nube04_movil.glb",
+            "nombre": "area1300nube04_movil.glb",
+            "bytes": 26994756,
+            "sha": "172f894aca77"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1300nube04_elementos.json",
+        "nombre": "area1300nube04_elementos.json",
+        "bytes": 6719331,
+        "sha": "a2d6af2c10c9"
+      }
     }
   ]
 }
