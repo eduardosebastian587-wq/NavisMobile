@@ -18,6 +18,8 @@
   Opciones:
     -Raices "0:27/6/0/0,0:28"   solo esos nodos (ids de find_items); vacío = todo el documento
     -Excluir "..."              nodos a omitir
+    -Rutas "A/B/1300|C/D/1300"  nodos por nombre (se suman a -Raices); si un nombre no existe, el error lista los disponibles
+    -ExcluirNombres "MecMiscellaneous,Unknown"   omite en todo el subárbol los nodos con esos nombres
     -Destino <carpeta>          dónde dejar el resultado (por defecto la carpeta NavisMobile\entrada en Drive)
     -Nucleos N                  núcleos que puede usar Navisworks (por defecto la mitad)
     -Formato fbx                plan B: usa el exportador FBX nativo de Navisworks en vez del plugin
@@ -32,6 +34,8 @@ param(
   [Parameter(Mandatory = $true)][ValidatePattern('^[A-Za-z0-9_-]+$')][string]$Id,
   [string]$Raices = '',
   [string]$Excluir = '',
+  [string]$Rutas = '',
+  [string]$ExcluirNombres = '',
   [string]$Destino = '',
   [int]$Nucleos = 0,
   [ValidateSet('nmraw', 'fbx')][string]$Formato = 'nmraw',
@@ -106,6 +110,8 @@ try {
       $args2 = @("salida=$salida")
       if ($Raices) { $args2 += "raices=$Raices" }
       if ($Excluir) { $args2 += "excluir=$Excluir" }
+      if ($Rutas) { $args2 += "rutas=$Rutas" }
+      if ($ExcluirNombres) { $args2 += "excluir_nombres=$ExcluirNombres" }
       try { $r = $app.ExecuteAddInPlugin($PLUGIN_LOTE, [string[]]$args2) }
       catch { throw "Navisworks no ejecutó $PLUGIN_LOTE ($($_.Exception.Message)). Si el plugin no carga en modo oculto, usa -Formato fbx (plan B)." }
     }

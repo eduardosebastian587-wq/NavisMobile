@@ -17,6 +17,8 @@ namespace NwMobileExport
     {
         public string[] Raices, Excluir;
         public string Salida, Estado, Cancelar;
+        /// <summary>Nombres de nodo (DisplayName exacto, sin distinguir mayúsculas) que se omiten con todo su contenido.</summary>
+        public HashSet<string> ExcluirNombres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -109,7 +111,7 @@ namespace NwMobileExport
 
         private void Visitar(Document doc, ModelItem it, List<string> cadena, string tag)
         {
-            if (_cancelado || it.IsHidden || _excluir.Contains(it)) return;
+            if (_cancelado || it.IsHidden || _excluir.Contains(it) || _t.ExcluirNombres.Contains(it.DisplayName ?? "")) return;
             _nodos++;
             string nombre = it.DisplayName ?? "";
             var m = TagRe.Match(nombre);

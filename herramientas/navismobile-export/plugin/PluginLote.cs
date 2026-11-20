@@ -15,6 +15,9 @@ namespace NwMobileExport
     /// - raices  (opcional): ids "modelo:pathId" separados por coma. Vacío = todos los modelos del documento
     ///           (lo normal con un NWD de área, p. ej. "area 1313.nwd").
     /// - excluir (opcional): ids a omitir.
+    /// - rutas   (opcional): nodos por nombre, separados por '|': "TOTAL_PROYECTO_2.vue/AMSA_DMC/1300|TOTAL_PROYECTO_4.vue/AMSA_DMC/1300".
+    ///           Se suman a raices. Si un tramo no existe, el error lista los nombres disponibles en ese nivel.
+    /// - excluir_nombres (opcional): nombres de nodo a omitir en todo el subárbol, separados por coma ("MecMiscellaneous,Unknown").
     /// No muestra ventanas: cualquier error queda en &lt;salida&gt;.estado.json y en el registro del plugin.
     /// Devuelve 0 si terminó bien y 1 si falló o se canceló.
     /// </summary>
@@ -48,6 +51,9 @@ namespace NwMobileExport
                 var doc = NwApp.ActiveDocument;
                 if (doc == null || doc.Models.Count == 0) throw new InvalidOperationException("No hay documento abierto en la instancia oculta");
                 string[] raices = Lista(arg, "raices");
+                string rutas;
+                if (arg.TryGetValue("rutas", out rutas) && rutas.Length > 0)
+                    raices = raices.Concat(rutas.Split('|').Select(x => x.Trim()).Where(x => x.Length > 0).Select(x => PorRuta(doc, x))).ToArray();
                 if (raices.Length == 0)
                 {
                     // Todo el documento: un id por modelo raíz ("<índice>:" + pathId del raíz).
@@ -63,6 +69,8 @@ namespace NwMobileExport
                     Estado = estado,
                     Cancelar = salida + ".cancelar",
                 };
+                foreach (var n in Lista(arg, "excluir_nombres")) t.ExcluirNombres.Add(n);
+                if (t.ExcluirNombres.Count > 0) anotar("Lote: se omiten los nodos llamados " + string.Join(", ", t.ExcluirNombres));
                 anotar("Lote: " + doc.FileName + " -> " + salida + " (" + raices.Length + " raíces)");
                 string r = new Exportador(t).Ejecutar();
                 anotar("Lote: " + r);
@@ -75,6 +83,28 @@ namespace NwMobileExport
                 Estado.Escribir(estado, new Dictionary<string, object> { { "estado", "error" }, { "error", ex.Message } });
                 return 1;
             }
+        }
+
+        /// <summary>Resuelve "A/B/C" por DisplayName (sin distinguir mayúsculas) desde los modelos raíz y devuelve su id "modelo:pathId".</summary>
+        private static string PorRuta(Document doc, string ruta)
+        {
+            var tramos = ruta.Split('/').Select(x => x.Trim()).Where(x => x.Length > 0).ToArray();
+            IEnumerable<ModelItem> nivel = doc.Models.RootItems;
+            ModelItem actual = null;
+            foreach (var tramo in tramos)
+            {
+                var hijos = nivel.ToList();
+                actual = hijos.FirstOrDefault(h => string.Equals((h.DisplayName ?? "").Trim(), tramo, StringComparison.OrdinalIgnoreCase));
+                if (actual == null)
+                {
+                    var nombres = hijos.Select(h => h.DisplayName ?? "").Take(40);
+                    throw new InvalidOperationException("Ruta \"" + ruta + "\": no existe \"" + tramo + "\". Disponibles: " + string.Join(" | ", nombres));
+                }
+                nivel = actual.Children;
+            }
+            if (actual == null) throw new InvalidOperationException("Ruta vacía");
+            var id = doc.Models.CreatePathId(actual);
+            return id.ModelIndex + ":" + id.PathId;
         }
 
         private static string[] Lista(Dictionary<string, string> a, string k)
