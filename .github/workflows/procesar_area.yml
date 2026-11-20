@@ -18,6 +18,10 @@ on:
         description: 'Nombre visible en la app (vacío = el id)'
         required: false
         default: ''
+      piezas:
+        description: 'Solo si archivo es un enlace a un .nmraw: enlace a su .piezas.json'
+        required: false
+        default: ''
       carpeta:
         description: 'Id de la carpeta de Drive donde buscar (por defecto «proyecto animación»)'
         required: false
@@ -51,6 +55,7 @@ jobs:
       AREA_ID: ${{ inputs.id }}
       AREA_NOMBRE: ${{ inputs.nombre }}
       CARPETA: ${{ inputs.carpeta }}
+      PIEZAS: ${{ inputs.piezas }}
       CELDA: ${{ inputs.celda }}
       RATIO: ${{ inputs.ratio }}
       PUBLICAR: ${{ inputs.publicar }}
@@ -85,7 +90,13 @@ jobs:
           case "${ARCHIVO,,}" in
             *.nmraw) TIPO=nmraw; EXTRA=(--tambien .piezas.json) ;;
             *.fbx)   TIPO=fbx;   EXTRA=() ;;
-            *drive.google.com*|*usercontent*) TIPO=fbx; EXTRA=(--nombre "$AREA_ID.fbx"); echo "::notice::Enlace directo: se trata como FBX" ;;
+            *drive.google.com*|*usercontent*)
+              if [ -n "$PIEZAS" ]; then
+                TIPO=nmraw; EXTRA=(--nombre "$AREA_ID.nmraw")
+                node herramientas/drive_descargar.mjs --archivo "$PIEZAS" --nombre "$AREA_ID.nmraw.piezas.json" --destino "$TRABAJO/" > /dev/null
+              else
+                TIPO=fbx; EXTRA=(--nombre "$AREA_ID.fbx"); echo "::notice::Enlace directo sin piezas: se trata como FBX"
+              fi ;;
             *) echo "::error::El archivo debe terminar en .nmraw o .fbx (o ser un enlace de Drive a un FBX)"; exit 1 ;;
           esac
           RUTA=$(node herramientas/drive_descargar.mjs --archivo "$ARCHIVO" --carpeta "$CARPETA" --destino "$TRABAJO/" "${EXTRA[@]}")
