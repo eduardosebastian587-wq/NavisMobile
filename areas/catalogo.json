@@ -153,6 +153,30 @@
         "bytes": 4126279,
         "sha": "5314ae752537"
       }
+    },
+    {
+      "id": "area1313nube",
+      "nombre": "Área 1313 — completa (procesada en la nube)",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 11:10",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1313nube_movil.glb",
+            "nombre": "area1313nube_movil.glb",
+            "bytes": 15293836,
+            "sha": "bdf38d9af924"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1313nube_elementos.json",
+        "nombre": "area1313nube_elementos.json",
+        "bytes": 2939177,
+        "sha": "af60fc255b95"
+      }
     }
   ]
 }
