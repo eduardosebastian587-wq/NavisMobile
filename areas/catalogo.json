@@ -42,30 +42,6 @@
       }
     },
     {
-      "id": "area1313d",
-      "nombre": "Área 1313 — exportación directa",
-      "descripcion": "Exportado con el plugin NwMobileExport, sin FBX. Toque un elemento para ver su TAG y propiedades SmartPlant 3D.",
-      "modelos": [
-        {
-          "id": "completo",
-          "nombre": "Completo (simplificado)",
-          "archivo": {
-            "ruta": "area1313d_movil.glb",
-            "nombre": "area1313d_movil.glb",
-            "bytes": 8946056,
-            "sha": "afe2fcb828f6"
-          }
-        }
-      ],
-      "etiquetas": {
-        "ruta": "area1313d_elementos.json",
-        "nombre": "area1313d_elementos.json",
-        "bytes": 2022670,
-        "sha": "db0312b4ede2"
-      },
-      "actualizado": "2026-11-18 20:50"
-    },
-    {
       "id": "area1313",
       "nombre": "Área 1313 — molinos",
       "descripcion": "Molinos ML-1401/1402, pórtico y pescantes (sin equipos animados todavía).",
