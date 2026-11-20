@@ -37,6 +37,12 @@ namespace NwMobileExport
                 return 1;
             }
             string estado = salida + ".estado.json";
+            // Registro propio junto al .nmraw: en la instancia oculta export.log no siempre recibe las líneas.
+            Action<string> anotar = m =>
+            {
+                Log.Info(m);
+                try { File.AppendAllText(salida + ".log", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + m + Environment.NewLine); } catch { }
+            };
             try
             {
                 var doc = NwApp.ActiveDocument;
@@ -57,14 +63,15 @@ namespace NwMobileExport
                     Estado = estado,
                     Cancelar = salida + ".cancelar",
                 };
-                Log.Info("Lote: " + doc.FileName + " -> " + salida + " (" + raices.Length + " raíces)");
+                anotar("Lote: " + doc.FileName + " -> " + salida + " (" + raices.Length + " raíces)");
                 string r = new Exportador(t).Ejecutar();
-                Log.Info("Lote: " + r);
+                anotar("Lote: " + r);
                 return r.StartsWith("Cancelado") ? 1 : 0;
             }
             catch (Exception ex)
             {
                 Log.Error("Lote: " + ex);
+                try { File.AppendAllText(salida + ".log", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ERROR " + ex + Environment.NewLine); } catch { }
                 Estado.Escribir(estado, new Dictionary<string, object> { { "estado", "error" }, { "error", ex.Message } });
                 return 1;
             }
