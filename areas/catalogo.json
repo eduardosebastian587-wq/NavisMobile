@@ -59,30 +59,6 @@
       ]
     },
     {
-      "id": "area1411",
-      "nombre": "Área 1411",
-      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
-      "actualizado": "2026-11-18 21:24",
-      "modelos": [
-        {
-          "id": "completo",
-          "nombre": "Completo (simplificado)",
-          "archivo": {
-            "ruta": "area1411_movil.glb",
-            "nombre": "area1411_movil.glb",
-            "bytes": 3434704,
-            "sha": "a62426d9b6f4"
-          }
-        }
-      ],
-      "etiquetas": {
-        "ruta": "area1411_elementos.json",
-        "nombre": "area1411_elementos.json",
-        "bytes": 913032,
-        "sha": "78d9692b6a10"
-      }
-    },
-    {
       "id": "hitom331",
       "nombre": "Hito M33-1 — correas y domo",
       "descripcion": "Toque un elemento para ver su TAG y propiedades.",
