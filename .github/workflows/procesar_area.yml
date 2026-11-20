@@ -57,7 +57,6 @@ jobs:
       CELDA: ${{ inputs.celda || '0.08' }}
       RATIO: ${{ inputs.ratio || '0.25' }}
       PUBLICAR: ${{ inputs.publicar }}
-      TRABAJO: ${{ runner.temp }}/trabajo
     steps:
       - uses: actions/checkout@v4
 
@@ -77,6 +76,8 @@ jobs:
 
       - name: Revisar parámetros
         run: |
+          echo "TRABAJO=$RUNNER_TEMP/trabajo" >> "$GITHUB_ENV"
+          TRABAJO="$RUNNER_TEMP/trabajo"
           [[ "$AREA_ID" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "::error::id inválido: $AREA_ID"; exit 1; }
           [[ "$CELDA" =~ ^[0-9.]+$ && "$RATIO" =~ ^[0-9.]+$ ]] || { echo "::error::celda/ratio deben ser números"; exit 1; }
           mkdir -p "$TRABAJO"
