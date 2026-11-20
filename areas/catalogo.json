@@ -153,6 +153,30 @@
         "bytes": 4421433,
         "sha": "9900592fc840"
       }
+    },
+    {
+      "id": "area1411nube",
+      "nombre": "Área 1411 — completa (procesada en la nube)",
+      "descripcion": "Toque un elemento para ver su TAG y propiedades.",
+      "actualizado": "2026-11-20 15:13",
+      "modelos": [
+        {
+          "id": "completo",
+          "nombre": "Completo (simplificado)",
+          "archivo": {
+            "ruta": "area1411nube_movil.glb",
+            "nombre": "area1411nube_movil.glb",
+            "bytes": 4019096,
+            "sha": "955d04acaf1e"
+          }
+        }
+      ],
+      "etiquetas": {
+        "ruta": "area1411nube_elementos.json",
+        "nombre": "area1411nube_elementos.json",
+        "bytes": 913757,
+        "sha": "832a420d1c98"
+      }
     }
   ]
 }
